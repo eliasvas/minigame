@@ -1,0 +1,1 @@
+gcc -g -std=c99 -DENABLE_ASSERT -Iinclude/ src/main.c -o build/game
