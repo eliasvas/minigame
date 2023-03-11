@@ -1,6 +1,6 @@
 #include "base.h"
 #include "mWin.h"
-#include "SDL2/SDL.h"
+#include "mInput.h"
 
 mWin window;
 int main(int argc, char** args) {
@@ -12,6 +12,10 @@ int main(int argc, char** args) {
 	wd.opt |= MWIN_OPT_RESIZABLE;
 
 	mwin_create(&wd, &window);
+	
+	while (1){
+		minput_update();
+	}
 
 	mwin_destroy(&window);
 }

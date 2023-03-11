@@ -26,6 +26,13 @@
   #define OS_MAC 0
 #endif
 
+#if !defined(TRUE)
+  #define TRUE 1
+#endif
+#if !defined(FALSE)
+  #define FALSE 0
+#endif
+
 #define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
 
 #define KB(n)  (((U64)(n)) << 10)
@@ -144,7 +151,14 @@ inline u64 xorshift64(u64 state[])
 static u64 xorshift64_example_state[1] = {42};
 #define RND_SEED(x) (xorshift64_example_state[0] = x)
 #define RND() (xorshift64(xorshift64_example_state))
-
+typedef union {
+    struct { f32 x; f32 y; };
+    f32 v[2];
+}v2;
+typedef union {
+    struct { i32 x; i32 y; };
+    i32 v[2];
+}iv2;
 typedef enum {
     M_ERR = 0,
     M_OK,
