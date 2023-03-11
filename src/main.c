@@ -1,18 +1,17 @@
 #include "base.h"
+#include "mWin.h"
+#include "SDL2/SDL.h"
 
-char *a = NULL;
+mWin window;
+int main(int argc, char** args) {
+	mWinDesc wd = {0};
+	wd.x = 100;
+	wd.y = 100;
+	wd.width = 600;
+	wd.height = 400;
+	wd.opt |= MWIN_OPT_RESIZABLE;
 
-void push_text(char *str){
-	for (int i = 0; i < strlen(str); ++i){
-		da_push(a, str[i]);
-	}
-	da_push(a,'\n');
-}
-int main(){
-	push_text("  _ __ ___  ");
-	push_text(" | '_ ` _ \\ ");
-	push_text(" | | | | | |");
-	push_text(" |_| |_| |_|");
-	printf("%s", &a[0]);
-	da_free(a);
+	mwin_create(&wd, &window);
+
+	mwin_destroy(&window);
 }

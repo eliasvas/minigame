@@ -7,6 +7,25 @@
 #include <math.h>
 #include <time.h>
 
+
+#if defined(_WIN32)
+  #define OS_WIN 1
+#elif defined(__gnu_linux__)
+  #define OS_LINUX 1
+#elif defined(__APPLE__)
+  #define OS_MAC 1
+#endif
+
+#if !defined(OS_WIN)
+  #define OS_WIN 0
+#endif
+#if !defined(OS_LINUX)
+  #define OS_LINUX 0
+#endif
+#if !defined(OS_MAC)
+  #define OS_MAC 0
+#endif
+
 #define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
 
 #define KB(n)  (((U64)(n)) << 10)
@@ -35,6 +54,8 @@
 #define MEMMATCH(a,b,z) (memcmp((a),(b),(z)) == 0)
 #define MEMMATCH_STRUCT(a,b) MEMMATCH(a,b,sizeof(*(a)))
 
+#define MALLOC(n) malloc(n)
+#define FREE(n) free(n)
 
 //TYPEDEFS
 typedef int8_t   i8;
@@ -84,7 +105,7 @@ typedef struct {
 #define da_deln(a,i,n)   (memmove(&(a)[i], &(a)[(i)+(n)], sizeof *(a) * (da_hdr(a)->len-(n)-(i))), da_hdr(a)->len -= (n))
 #define da_delswap(a,i)  ((a)[i] = da_last(a), da_hdr(a)->len -= 1)
 #define da_free(a)       ((void) ((a) ? DA_FREE(NULL,da_hdr(a)) : (void)0), (a)=NULL)
-void *da_growf(void *a, size_t elemsize, size_t addlen, size_t min_cap){
+inline void *da_growf(void *a, size_t elemsize, size_t addlen, size_t min_cap){
   da_header temp={0}; // force debugging
   void *b;
   size_t min_len = da_len(a) + addlen;
@@ -105,13 +126,13 @@ void *da_growf(void *a, size_t elemsize, size_t addlen, size_t min_cap){
   da_hdr(b)->cap = min_cap;
   return b;
 }
-void da_freef(void *a){
+inline void da_freef(void *a){
   DA_FREE(NULL, da_hdr(a));
 }
 
 
 //RNG
-u64 xorshift64(u64 state[])
+inline u64 xorshift64(u64 state[])
 {
   u64 x = state[0];
   x ^= x << 13;
@@ -120,10 +141,14 @@ u64 xorshift64(u64 state[])
   state[0] = x;
   return x;
 }
-u64 xorshift64_example_state[1] = {42};
+static u64 xorshift64_example_state[1] = {42};
 #define RND_SEED(x) (xorshift64_example_state[0] = x)
 #define RND() (xorshift64(xorshift64_example_state))
 
+typedef enum {
+    M_ERR = 0,
+    M_OK,
+}M_RESULT;
 
 
 #endif
