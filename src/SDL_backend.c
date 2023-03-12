@@ -9,6 +9,11 @@ typedef struct {
 	SDL_Window* window;
 }SDLImplWindow;
 
+mWin window;
+
+mWin *mwin_get_instance() {
+	return &window;
+}
 M_RESULT mwin_create(mWinDesc *desc, mWin *win){
 	//SDL window implementation
 	win->desc = *desc;
@@ -92,7 +97,7 @@ void minput_update(void)
 	}else {
 		mis.keys[MK_LMB] = 0;
 	}
-	printf("Mouse: [%i:%i], [%i,%i]\n", mis.mouse_pos_x, mis.mouse_pos_y, mis.mouse_delta_x, mis.mouse_delta_y);
+	//printf("Mouse: [%i:%i], [%i,%i]\n", mis.mouse_pos_x, mis.mouse_pos_y, mis.mouse_delta_x, mis.mouse_delta_y);
 
 	if (mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT)){
 		mis.keys[MK_RMB] = 1;
@@ -106,4 +111,53 @@ void minput_update(void)
 		mis.keys[MK_MMB] = 0;
 	}
 	
+}
+
+
+
+//TEXTURES
+#include "mTex.h"
+
+typedef struct {
+	SDL_Surface* image;
+	SDL_PixelFormat format;
+}SDLImplTexture;
+//SDL_CreateRGBSurfaceFrom(data, IMAGE_WIDTH, IMAGE_HEIGHT, 8, IMAGE_WIDTH /*pitch*/, 0, 0, 0, 0);
+M_RESULT mtex_create(mTexDesc *desc, mTex *tex){
+	MEMZERO_STRUCT((mTex*)tex);
+	tex->desc = *desc;
+
+	SDLImplTexture *sdl_tex = malloc(sizeof(SDLImplTexture));
+	MEMZERO_STRUCT((SDLImplTexture*)sdl_tex);
+
+	sdl_tex->image = SDL_LoadBMP(tex->desc.filename);
+
+	if (sdl_tex->image == NULL) {
+		printf("Error loading image: [%s]\n", tex->desc.filename);
+		return M_ERR;
+	}
+	tex->internal_state = sdl_tex;
+
+	return M_OK;
+}
+M_RESULT mtex_destroy(mTex *tex){
+	M_RESULT res = M_OK;
+	//code
+	SDLImplTexture *sdl_texture = (SDLImplTexture*)tex->internal_state;
+	SDL_FreeSurface(sdl_texture->image);
+	free(sdl_texture);
+	MEMZERO_STRUCT(tex);
+	return res;
+}
+M_RESULT mtex_render(mTex *tex, mRect sub_area, mRect render_area){
+	M_RESULT res = M_OK;
+	SDLImplTexture *sdl_tex = tex->internal_state;
+	SDLImplWindow *dest_tex = window.internal_state;
+	SDL_Rect sub_rect = {sub_area.x, sub_area.y,sub_area.w, sub_area.h};
+	SDL_Rect dst_rect = {render_area.x, render_area.y,render_area.w, render_area.h};
+	SDL_BlitScaled(sdl_tex->image,&sub_rect,dest_tex->window_surface,&dst_rect);
+
+	SDL_UpdateWindowSurface(dest_tex->window);
+
+	return res;
 }

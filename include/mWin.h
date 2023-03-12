@@ -11,8 +11,8 @@ typedef enum {
 }MWIN_OPT;
 
 typedef struct {
-    u32 width, height; //width and height (in pixels)
     u32 x, y; //start pos
+    u32 width, height; //width and height (in pixels)
     MWIN_OPT opt;
 }mWinDesc;
 
@@ -22,6 +22,7 @@ typedef struct {
     void *internal_state; 
 } mWin;
 
+mWin* mwin_get_instance(void);
 M_RESULT mwin_create(mWinDesc *desc, mWin *win);
 M_RESULT mwin_destroy(mWin *win);
 

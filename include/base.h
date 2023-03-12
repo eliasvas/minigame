@@ -159,6 +159,10 @@ typedef union {
     struct { i32 x; i32 y; };
     i32 v[2];
 }iv2;
+
+typedef struct {
+  int x,y,w,h;
+}mRect;
 typedef enum {
     M_ERR = 0,
     M_OK,

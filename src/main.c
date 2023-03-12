@@ -1,21 +1,32 @@
 #include "base.h"
 #include "mWin.h"
 #include "mInput.h"
+#include "mTex.h"
 
-mWin window;
+static mTex t;
+
+void minit(){
+	mWinDesc wd = {100,100,600,400,MWIN_OPT_RESIZABLE};
+	mwin_create(&wd, mwin_get_instance());
+
+	mTexDesc td = {"../assets/image.bmp", 200,200,MTEX_FORMAT_RGBA8U};
+    mtex_create(&td, &t);
+}
+void mupdate(){
+	minput_update();
+}
+void mrender(){
+	mtex_render(&t, (mRect){0,0,200,200}, (mRect){100,100,300,200});
+}
+
 int main(int argc, char** args) {
-	mWinDesc wd = {0};
-	wd.x = 100;
-	wd.y = 100;
-	wd.width = 600;
-	wd.height = 400;
-	wd.opt |= MWIN_OPT_RESIZABLE;
+	minit();
 
-	mwin_create(&wd, &window);
 	
 	while (1){
-		minput_update();
+		mupdate();
+		mrender();
 	}
 
-	mwin_destroy(&window);
+	mwin_destroy(mwin_get_instance());
 }
