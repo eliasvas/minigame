@@ -46,7 +46,6 @@
 #define CLAMP_BOT(X,B) MAX(X,B)
 #define CLAMP(A,X,B) ( ((X)<(A))?(A):((X)>(B))?(B):(X) )
 
-
 #define MEMBER(T,m) (((T*)0)->m)
 #define OFFSET_OF(T,m) INT_FROM_PTR(&MEMBER(T,m))
 
@@ -80,9 +79,13 @@ typedef i64      b64;
 typedef float    f32;
 typedef double   f64;
 
-
 #define INT_FROM_PTR(ptr) ((u64)(ptr))
 #define PTR_FROM_INT(i) (void*)((u8*)0 + (i))
+
+static inline b32 is_pow2(uintptr_t x){
+  return ((INT_FROM_PTR(x) & (INT_FROM_PTR(x)-1)) == 0);
+}
+
 
 //ASSERTS
 #define STMNT(S) do{ S }while(0)
@@ -151,6 +154,47 @@ inline u64 xorshift64(u64 state[])
 static u64 xorshift64_example_state[1] = {42};
 #define RND_SEED(x) (xorshift64_example_state[0] = x)
 #define RND() (xorshift64(xorshift64_example_state))
+
+//LINKED LISTS
+
+#define dll_push_back_NP(f,l,n,next,prev) ((f)==0?((f)=(l)=(n),(n)->next=(n)->prev=0):\
+((l)->next=(n),(n)->prev=(l),(l)=(n),(n)->next=0) )
+
+#define dll_push_front_NP(f,l,n,next,prev) dll_push_back_NP(l,f,n,prev,next)
+
+#define dll_push_back(f,l,n) dll_push_back_NP(f,l,n,next,prev)
+#define dll_push_front(f,l,n) dll_push_front_NP(f,l,n,next,prev)
+
+#define dll_remove_first_NP(f,l,next,prev) (((f)==(l))?(f)=(l)=0:\
+((f)=(f)->next,(f)->prev=0) )
+#define dll_remove_last_NP(f,l,next,prev) dll_remove_first_NP(l,f,prev,next)
+#define dll_remove_NP(f,l,n,next,prev) (((f)==(n))?dll_remove_first_NP(f,l,next,prev):\
+((l)==(n))?dll_remove_last_NP(f,l,next,prev):\
+((n)->next->prev=(n)->prev,(n)->prev->next=(n)->next))
+
+#define dll_remove(f,l,n) dll_remove_NP(f,l,n,next,prev)
+
+
+#define sll_queue_push_N(f,l,n,next) ((f)==0?((f)=(l)=(n),(n)->next=0):\
+((l)->next=(n),(l)=(n),(n)->next=0))
+#define sll_queue_push_front_N(f,l,n,next) ((f)==0?((f)=(l)=(n),(n)->next=0):\
+((n)->next=(f),(f)=(n)) )
+#define sll_queue_pop_N(f,l,next) ((f)==(l)?(f)=(l)=0:\
+((f)=(f)->next))
+
+#define sll_queue_push(f,l,n) sll_queue_push_N(f,l,n,next)
+#define sll_queue_push_front(f,l,n) sll_queue_push_front_N(f,l,n,next)
+#define sll_queue_pop(f,l) sll_queue_pop_N(f,l,next)
+
+
+#define sll_stack_push_N(f,n,next) ( (n)->next=(f), (f)=(n) )
+#define sll_stack_pop_N(f,next) ( (f)=(f)->next )
+
+#define sll_stack_push(f,n) sll_stack_push_N(f,n,next)
+#define sll_stack_pop(f) sll_stack_pop_N(f,next)
+
+
+
 typedef union {
     struct { f32 x; f32 y; };
     f32 v[2];

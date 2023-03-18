@@ -39,7 +39,7 @@ M_RESULT mwin_create(mWinDesc *desc, mWin *win){
 		
 		return M_ERR;
 	}
-	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGB( sdl_win->window_surface->format, 255, 64, 64 ) );
+	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGB( sdl_win->window_surface->format, 64, 64, 64 ) );
 	SDL_UpdateWindowSurface( sdl_win->window );
 
 	//SDL_DestroyWindow( sdl_win->window );
@@ -63,7 +63,7 @@ M_RESULT mwin_destroy(mWin *win){
 //INPUT IMPLEMENTATION
 #include "mInput.h"
 struct mInputState;
-extern mInputState mis;
+mInputState mis;
 void minput_update(void)
 {
     MEMCPY(mis.prev_keys,mis.keys, sizeof(mis.keys[0]) * MK_MAX);
@@ -73,6 +73,7 @@ void minput_update(void)
 
 	for (int i = (MK_A - MK_A); i <= (MK_Z - MK_A); ++i){
 		if (keystate[SDL_SCANCODE_A + i] > 0){
+			printf("ON! [%i]\n", i);
 			mis.keys[MK_A + i] = 1;
 		}else{
 			mis.keys[MK_A + i] = 0;
@@ -110,7 +111,6 @@ void minput_update(void)
 	}else {
 		mis.keys[MK_MMB] = 0;
 	}
-	
 }
 
 
