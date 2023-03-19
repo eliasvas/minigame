@@ -155,45 +155,18 @@ static u64 xorshift64_example_state[1] = {42};
 #define RND_SEED(x) (xorshift64_example_state[0] = x)
 #define RND() (xorshift64(xorshift64_example_state))
 
-//LINKED LISTS
+//djb2 hash for more info visit http://www.cse.yorku.ca/~oz/hash.html
+static inline u64 hash_str(char *s)
+{
+    unsigned long hash = 5381;
+    int c;
 
-#define dll_push_back_NP(f,l,n,next,prev) ((f)==0?((f)=(l)=(n),(n)->next=(n)->prev=0):\
-((l)->next=(n),(n)->prev=(l),(l)=(n),(n)->next=0) )
+    while (c = *s++)
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
-#define dll_push_front_NP(f,l,n,next,prev) dll_push_back_NP(l,f,n,prev,next)
+    return hash;
 
-#define dll_push_back(f,l,n) dll_push_back_NP(f,l,n,next,prev)
-#define dll_push_front(f,l,n) dll_push_front_NP(f,l,n,next,prev)
-
-#define dll_remove_first_NP(f,l,next,prev) (((f)==(l))?(f)=(l)=0:\
-((f)=(f)->next,(f)->prev=0) )
-#define dll_remove_last_NP(f,l,next,prev) dll_remove_first_NP(l,f,prev,next)
-#define dll_remove_NP(f,l,n,next,prev) (((f)==(n))?dll_remove_first_NP(f,l,next,prev):\
-((l)==(n))?dll_remove_last_NP(f,l,next,prev):\
-((n)->next->prev=(n)->prev,(n)->prev->next=(n)->next))
-
-#define dll_remove(f,l,n) dll_remove_NP(f,l,n,next,prev)
-
-
-#define sll_queue_push_N(f,l,n,next) ((f)==0?((f)=(l)=(n),(n)->next=0):\
-((l)->next=(n),(l)=(n),(n)->next=0))
-#define sll_queue_push_front_N(f,l,n,next) ((f)==0?((f)=(l)=(n),(n)->next=0):\
-((n)->next=(f),(f)=(n)) )
-#define sll_queue_pop_N(f,l,next) ((f)==(l)?(f)=(l)=0:\
-((f)=(f)->next))
-
-#define sll_queue_push(f,l,n) sll_queue_push_N(f,l,n,next)
-#define sll_queue_push_front(f,l,n) sll_queue_push_front_N(f,l,n,next)
-#define sll_queue_pop(f,l) sll_queue_pop_N(f,l,next)
-
-
-#define sll_stack_push_N(f,n,next) ( (n)->next=(f), (f)=(n) )
-#define sll_stack_pop_N(f,next) ( (f)=(f)->next )
-
-#define sll_stack_push(f,n) sll_stack_push_N(f,n,next)
-#define sll_stack_pop(f) sll_stack_pop_N(f,next)
-
-
+}
 
 typedef union {
     struct { f32 x; f32 y; };

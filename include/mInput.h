@@ -152,7 +152,6 @@ static inline b32 mkey_up(mKey k)
 
 static inline b32 mkey_down(mKey k)
 {
-    printf("MK_A: %u\n", mis.keys[k]);
     return (mis.keys[k]);
 }
 

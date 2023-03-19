@@ -73,7 +73,7 @@ void minput_update(void)
 
 	for (int i = (MK_A - MK_A); i <= (MK_Z - MK_A); ++i){
 		if (keystate[SDL_SCANCODE_A + i] > 0){
-			printf("ON! [%i]\n", i);
+			//printf("ON! [%i]\n", i);
 			mis.keys[MK_A + i] = 1;
 		}else{
 			mis.keys[MK_A + i] = 0;

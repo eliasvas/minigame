@@ -7,19 +7,11 @@
 extern "C" {
 #endif
 
-void mtime_init(void);
-u64 mtime_now(void);
-u64 mtime_diff(u64 new_ticks, u64 old_ticks); 
-f64 mtime_sec(u64 ticks);
-f64 mtime_ms(u64 ticks);
-f64 mtime_us(u64 ticks);
-f64 mtime_ns(u64 ticks);
 
 #ifdef __cplusplus
 }
 #endif
 
-#ifdef MTIME_IMPLEMENTATION
 #if OS_WIN
 #include <windows.h>
 typedef struct mTimeState
@@ -50,7 +42,7 @@ s64 _ds64_muldiv(s64 value, s64 numer, s64 denom) {
 
 static mTimeState mtime_state;
 
-void mtime_init(void)
+static inline void mtime_init(void)
 {
     memset(&mtime_state,  0, sizeof(mtime_state));
     mtime_state.initialized = 0xABCDABCD; //why??
@@ -65,7 +57,7 @@ void mtime_init(void)
 
 }
 
-u64 mtime_now(void)
+static inline u64 mtime_now(void)
 {
     ASSERT(mtime_state.initialized == 0xABCDABCD);
     u64 now;
@@ -81,7 +73,7 @@ u64 mtime_now(void)
     return now;
 }
 
-u64 mtime_diff(u64 new_ticks, u64 old_ticks)
+static inline u64 mtime_diff(u64 new_ticks, u64 old_ticks)
 {
     if (new_ticks > old_ticks)
     {
@@ -93,26 +85,24 @@ u64 mtime_diff(u64 new_ticks, u64 old_ticks)
     }
 }
 
-f64 mtime_sec(u64 ticks)
+static inline f64 mtime_sec(u64 ticks)
 {
     return (f64)ticks / 1000000000.0;
 }
 
-f64 mtime_ms(u64 ticks)
+static inline f64 mtime_ms(u64 ticks)
 {
     return (f64)ticks / 1000000.0;
 }
 
-f64 mtime_us(u64 ticks)
+static inline f64 mtime_us(u64 ticks)
 {
     return (f64)ticks / 1000.0;
 }
 
-f64 mtime_ns(u64 ticks) 
+static inline f64 mtime_ns(u64 ticks) 
 {
     return (f64)ticks;
 }
-
-#endif  //MTIME_IMPLEMENTATION
 
 #endif  //MTIME_H
