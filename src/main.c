@@ -1,4 +1,5 @@
 #include "base.h"
+#include "math.h"
 #include "mWin.h"
 #include "mInput.h"
 #include "mTex.h"
@@ -22,7 +23,8 @@ void mupdate(){
 	//printf("Current time: [%f] seconds\n", mtime_sec(mtime_now()));
 }
 void mrender(){
-	mtex_render(&t, (mRect){0,0,200,200}, (mRect){100,100,300,200});
+	v2 mp = minput_get_mouse_pos();
+	mtex_render(&t, (mRect){0,0,200,200}, (mRect){mp.x - 50,mp.y - 50,100,100});
 }
 
 extern mProfiler global_profiler;
@@ -39,7 +41,7 @@ int main(int argc, char** args) {
 			exit(43);
 		mrender();
 		MPROFILER_END()
-		printf("Execution of tag [%s] : [%f] ms and [%lu] cycles!\n",global_profiler.tags[0].name,global_profiler.tags[0].samples[0],global_profiler.tags[0].cycles[0]); 
+		//printf("Execution of tag [%s] : [%f] ms and [%lu] cycles!\n",global_profiler.tags[0].name,global_profiler.tags[0].samples[0],global_profiler.tags[0].cycles[0]); 
 	}
 
 	u64 end_timestamp = mtime_now();
