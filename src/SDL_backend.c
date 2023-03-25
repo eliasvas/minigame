@@ -122,6 +122,7 @@ void minput_update(void)
 
 //TEXTURES
 #include "mTex.h"
+#include "mqoi.h"
 
 typedef struct {
 	SDL_Surface* image;
@@ -140,16 +141,14 @@ M_RESULT mtex_create(mTexDesc *desc, mTex *tex){
 		sdl_tex->image = SDL_LoadBMP(tex->desc.filename);
 	}else {
 		int channels = 4;
-		int WIDTH = 200;
-		int HEIGHT = 200;
-		u8 *data = malloc(sizeof(u32) * desc->width * desc->height);
-		for (u32 i = 0; i < WIDTH * HEIGHT * channels; i += channels){
-			data[i + 0] = 255*i/(f32)(WIDTH * HEIGHT * channels);
-			data[i + 1] = 255*i/(f32)(WIDTH * HEIGHT * channels);
-			data[i + 2] = 255*i/(f32)(WIDTH * HEIGHT * channels);
-			data[i + 3] = 255;
-		}
-		sdl_tex->image = SDL_CreateRGBSurfaceFrom(data, WIDTH, HEIGHT, 32,WIDTH *sizeof(u32),0xFF000000, 0x00FF0000,0x0000FF00, 0x000000FF);
+		mqoiDesc desc = {0};
+		u8 *data = (u8*)mqoi_load("../assets/image.qoi", &desc);
+		if (desc.channels == 4)
+			sdl_tex->image = SDL_CreateRGBSurfaceFrom(data, desc.width, desc.height, 32,desc.width *sizeof(u8) * desc.channels,0xFF000000, 0x00FF0000,0x0000FF00, 0x000000FF);
+		else 
+			sdl_tex->image = SDL_CreateRGBSurfaceFrom(data, desc.width, desc.height, 24,desc.width *sizeof(u8) * desc.channels,0xFF0000, 0x00FF00,0x0000FF, 0x000000);
+		tex->desc.width = desc.width;
+		tex->desc.height = desc.height;
 	}
 
 	if (sdl_tex->image == NULL) {
@@ -175,7 +174,7 @@ M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect){
 	SDLImplWindow *dest_tex = window.internal_state;
 
 	SDL_Rect tc = {tex_coords.x, tex_coords.y, tex_coords.w, tex_coords.h};
-	SDL_Rect r = {rect.x + 200, rect.y,rect.w, rect.h};
+	SDL_Rect r = {rect.x, rect.y,rect.w, rect.h};
 	//clear screen
 	SDL_FillRect( dest_tex->window_surface, NULL, SDL_MapRGB( dest_tex->window_surface->format, 64, 64, 64 ) );
 
