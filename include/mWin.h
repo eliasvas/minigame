@@ -6,8 +6,9 @@
 
 typedef enum {
     MWIN_OPT_RESIZABLE =  (1 << 0),
-    MWIN_OPT_FULLSCREEN = (1 << 1),
-    MWIN_OPT_HIDDEN =     (1 << 2),
+    MWIN_OPT_FULLSCREEN=  (1 << 1),
+    MWIN_OPT_HIDDEN    =  (1 << 2),
+    MWIN_OPT_BORDERED  =  (1 << 3),
 }MWIN_OPT;
 
 typedef struct {

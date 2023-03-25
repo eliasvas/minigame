@@ -39,6 +39,11 @@ M_RESULT mwin_create(mWinDesc *desc, mWin *win){
 		
 		return M_ERR;
 	}
+
+
+	SDL_SetWindowResizable(sdl_win->window, desc->opt & MWIN_OPT_RESIZABLE);
+	SDL_SetWindowBordered(sdl_win->window, desc->opt & MWIN_OPT_BORDERED);
+
 	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGB( sdl_win->window_surface->format, 64, 64, 64 ) );
 	SDL_UpdateWindowSurface( sdl_win->window );
 
@@ -130,10 +135,25 @@ M_RESULT mtex_create(mTexDesc *desc, mTex *tex){
 	SDLImplTexture *sdl_tex = malloc(sizeof(SDLImplTexture));
 	MEMZERO_STRUCT((SDLImplTexture*)sdl_tex);
 
-	sdl_tex->image = SDL_LoadBMP(tex->desc.filename);
+	int path_len = strlen(desc->filename);
+	if (strcmp(&desc->filename[path_len-3], "bmp") == 0){
+		sdl_tex->image = SDL_LoadBMP(tex->desc.filename);
+	}else {
+		int channels = 4;
+		int WIDTH = 200;
+		int HEIGHT = 200;
+		u8 *data = malloc(sizeof(u32) * desc->width * desc->height);
+		for (u32 i = 0; i < WIDTH * HEIGHT * channels; i += channels){
+			data[i + 0] = 255*i/(f32)(WIDTH * HEIGHT * channels);
+			data[i + 1] = 255*i/(f32)(WIDTH * HEIGHT * channels);
+			data[i + 2] = 255*i/(f32)(WIDTH * HEIGHT * channels);
+			data[i + 3] = 255;
+		}
+		sdl_tex->image = SDL_CreateRGBSurfaceFrom(data, WIDTH, HEIGHT, 32,WIDTH *sizeof(u32),0xFF000000, 0x00FF0000,0x0000FF00, 0x000000FF);
+	}
 
 	if (sdl_tex->image == NULL) {
-		printf("Error loading image: [%s]\n", tex->desc.filename);
+		printf("Error loading image [%s] : [%s]\n", tex->desc.filename, SDL_GetError());
 		return M_ERR;
 	}
 	tex->internal_state = sdl_tex;

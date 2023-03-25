@@ -11,12 +11,8 @@ static mTex t;
 
 void minit(){
 	mtime_init();
-	mWinDesc wd = {100,100,600,400,MWIN_OPT_RESIZABLE};
-	mwin_create(&wd, mwin_get_instance());
-
-	mTexDesc td = {"../assets/image.bmp", 200,200,MTEX_FORMAT_RGBA8U};
-    mtex_create(&td, &t);
-
+	mwin_create(&(mWinDesc){100,100,600,400,MWIN_OPT_RESIZABLE | MWIN_OPT_BORDERED}, mwin_get_instance());
+    mtex_create(&(mTexDesc){"../assets/image.qoi", 200,200,MTEX_FORMAT_RGBA8U}, &t);
 }
 void mupdate(){
 	minput_update();
