@@ -4,12 +4,14 @@
 
 typedef enum {
     MTEX_FORMAT_RGBA8U = (1 << 0),
-    MTEX_FORMAT_RGBA32F = (1 << 1),
+    MTEX_FORMAT_RGB8U =  (1 << 1),
+    MTEX_FORMAT_RGBA8S = (1 << 2),
+    MTEX_FORMAT_RGB8S =  (1 << 3),
+    MTEX_FORMAT_RGBA32F = (1 << 4),
 }MTEX_FORMAT;
 
 typedef struct {
-    char filename[64];
-    u32 width, height; //width and height (in pixels)
+    u32 width, height;
     MTEX_FORMAT format;
 }mTexDesc;
 
@@ -54,7 +56,7 @@ static inline M_RESULT mtex_clip(mRect *tex_coords, mRect *rect, mRect dst_rect)
     return M_OK;
 }
 
-M_RESULT mtex_create(mTexDesc *desc, mTex *tex);
+M_RESULT mtex_create(mTexDesc *desc, void *tex_data, mTex *tex);
 M_RESULT mtex_destroy(mTex *tex);
 M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect);
 

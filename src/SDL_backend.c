@@ -43,8 +43,9 @@ M_RESULT mwin_create(mWinDesc *desc, mWin *win){
 
 	SDL_SetWindowResizable(sdl_win->window, desc->opt & MWIN_OPT_RESIZABLE);
 	SDL_SetWindowBordered(sdl_win->window, desc->opt & MWIN_OPT_BORDERED);
-
-	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGB( sdl_win->window_surface->format, 64, 64, 64 ) );
+	if (SDL_SetSurfaceBlendMode(sdl_win->window_surface,SDL_BLENDMODE_BLEND) < 0){
+		printf("Error setting blend mode: [%s]\n", SDL_GetError());
+	}
 	SDL_UpdateWindowSurface( sdl_win->window );
 
 	//SDL_DestroyWindow( sdl_win->window );
@@ -126,33 +127,31 @@ void minput_update(void)
 
 typedef struct {
 	SDL_Surface* image;
+	void *texture_data;
 	SDL_PixelFormat format;
 }SDLImplTexture;
-//SDL_CreateRGBSurfaceFrom(data, IMAGE_WIDTH, IMAGE_HEIGHT, 8, IMAGE_WIDTH /*pitch*/, 0, 0, 0, 0);
-M_RESULT mtex_create(mTexDesc *desc, mTex *tex){
+
+M_RESULT mtex_create(mTexDesc *desc, void *tex_data, mTex *tex){
 	MEMZERO_STRUCT((mTex*)tex);
 	tex->desc = *desc;
 
 	SDLImplTexture *sdl_tex = malloc(sizeof(SDLImplTexture));
 	MEMZERO_STRUCT((SDLImplTexture*)sdl_tex);
 
-	int path_len = strlen(desc->filename);
-	if (strcmp(&desc->filename[path_len-3], "bmp") == 0){
-		sdl_tex->image = SDL_LoadBMP(tex->desc.filename);
-	}else {
-		int channels = 4;
-		mqoiDesc desc = {0};
-		u8 *data = (u8*)mqoi_load("../assets/image.qoi", &desc);
-		if (desc.channels == 4)
-			sdl_tex->image = SDL_CreateRGBSurfaceFrom(data, desc.width, desc.height, 32,desc.width *sizeof(u8) * desc.channels,0xFF000000, 0x00FF0000,0x0000FF00, 0x000000FF);
-		else 
-			sdl_tex->image = SDL_CreateRGBSurfaceFrom(data, desc.width, desc.height, 24,desc.width *sizeof(u8) * desc.channels,0xFF0000, 0x00FF00,0x0000FF, 0x000000);
-		tex->desc.width = desc.width;
-		tex->desc.height = desc.height;
+	u32 channels = ((desc->format & MTEX_FORMAT_RGBA8U) || (desc->format & MTEX_FORMAT_RGBA8S)) ? 4 : 3;
+	if (channels == 4)
+		sdl_tex->image = SDL_CreateRGBSurfaceFrom(tex_data, desc->width, desc->height, 32,desc->width * sizeof(u8) * channels,0xFF000000, 0x00FF0000,0x0000FF00, 0x000000FF);
+	else 
+		sdl_tex->image = SDL_CreateRGBSurfaceFrom(tex_data, desc->width, desc->height, 24,desc->width * sizeof(u8) * channels,0xFF0000, 0x00FF00,0x0000FF, 0x000000);
+	if (SDL_SetSurfaceBlendMode(sdl_tex->image,SDL_BLENDMODE_BLEND) < 0){
+		printf("Error setting blend mode: [%s]\n", SDL_GetError());
 	}
+	tex->desc.width = desc->width;
+	tex->desc.height = desc->height;
+	sdl_tex->texture_data = tex_data;
 
 	if (sdl_tex->image == NULL) {
-		printf("Error loading image [%s] : [%s]\n", tex->desc.filename, SDL_GetError());
+		printf("Error loading image : [%s]\n", SDL_GetError());
 		return M_ERR;
 	}
 	tex->internal_state = sdl_tex;
@@ -164,7 +163,9 @@ M_RESULT mtex_destroy(mTex *tex){
 	//code
 	SDLImplTexture *sdl_texture = (SDLImplTexture*)tex->internal_state;
 	SDL_FreeSurface(sdl_texture->image);
-	free(sdl_texture);
+	if (sdl_texture->texture_data != NULL)
+		FREE(sdl_texture->texture_data);
+	FREE(sdl_texture);
 	MEMZERO_STRUCT(tex);
 	return res;
 }
@@ -176,7 +177,7 @@ M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect){
 	SDL_Rect tc = {tex_coords.x, tex_coords.y, tex_coords.w, tex_coords.h};
 	SDL_Rect r = {rect.x, rect.y,rect.w, rect.h};
 	//clear screen
-	SDL_FillRect( dest_tex->window_surface, NULL, SDL_MapRGB( dest_tex->window_surface->format, 64, 64, 64 ) );
+	SDL_FillRect( dest_tex->window_surface, NULL, SDL_MapRGBA( dest_tex->window_surface->format, 64, 64, 64, 255 ) );
 
 	//clip the rect
 	mtex_clip(&tex_coords, &rect, (mRect){100,100,400,200});

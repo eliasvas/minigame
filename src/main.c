@@ -3,6 +3,7 @@
 #include "mWin.h"
 #include "mInput.h"
 #include "mTex.h"
+#include "mqoi.h"
 #include "mAlloc.h"
 #include "mProfiler.h"
 #define MTIME_IMPLEMENTATION
@@ -12,7 +13,18 @@ static mTex t;
 void minit(){
 	mtime_init();
 	mwin_create(&(mWinDesc){100,100,600,400,MWIN_OPT_RESIZABLE | MWIN_OPT_BORDERED}, mwin_get_instance());
-    mtex_create(&(mTexDesc){"../assets/image.qoi", 256,256,MTEX_FORMAT_RGBA8U}, &t);
+    
+	mqoiDesc desc;
+	u8 *tp = mqoi_load("../assets/testcard.qoi", &desc);
+	MTEX_FORMAT format;
+	if (desc.colorspace){
+		if (desc.channels == 4)format = MTEX_FORMAT_RGBA8U;
+		else format = MTEX_FORMAT_RGB8U;
+	}else {
+		if (desc.channels == 4)format = MTEX_FORMAT_RGBA8S;
+		else format = MTEX_FORMAT_RGB8S;
+	}
+	mtex_create(&(mTexDesc){desc.width,desc.height,format},tp, &t);
 }
 void mupdate(){
 	minput_update();

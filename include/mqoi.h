@@ -117,16 +117,6 @@ static inline void *qoi_decode(void *data, u32 data_size, mqoiDesc *desc){
 		}
 
 	}
-
-
-	/*
-	for (u32 i = 0; i < desc->width * desc->height * desc->channels; i += channels){
-		pdata[i + 0] = 255*i/(f32)(desc->width * desc->height * channels);
-		pdata[i + 1] = 255*i/(f32)(desc->width * desc->height * channels);
-		pdata[i + 2] = 255*i/(f32)(desc->width * desc->height * channels);
-		pdata[i + 3] = 255;
-	}
-	*/
 	return pdata;
 }
 
