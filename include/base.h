@@ -185,4 +185,8 @@ typedef enum {
     M_OK,
 }M_RESULT;
 
+
+
+void mrender_clear();
+
 #endif

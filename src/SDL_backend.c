@@ -176,21 +176,26 @@ M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect){
 
 	SDL_Rect tc = {tex_coords.x, tex_coords.y, tex_coords.w, tex_coords.h};
 	SDL_Rect r = {rect.x, rect.y,rect.w, rect.h};
-	//clear screen
-	SDL_FillRect( dest_tex->window_surface, NULL, SDL_MapRGBA( dest_tex->window_surface->format, 64, 64, 64, 255 ) );
-
+	
 	//clip the rect
-	mtex_clip(&tex_coords, &rect, (mRect){100,100,400,200});
+	mtex_clip(&tex_coords, &rect, (mRect){0,0,600,400});
 	tc = (SDL_Rect){tex_coords.x, tex_coords.y, tex_coords.w, tex_coords.h};
 	r = (SDL_Rect){rect.x, rect.y,rect.w, rect.h};
 
 	//in the real renderer we should just push the attribs to buffers and do instanced rendering!
-	printf("rect: [%i,%i,%i,%i]\n", r.x, r.y, r.w + r.x, r.h + r.y);
+	//printf("rect: [%i,%i,%i,%i]\n", r.x, r.y, r.w + r.x, r.h + r.y);
 	
 	//draw it with our own clipping algorithm :P
 	SDL_BlitScaled(sdl_tex->image,&tc,dest_tex->window_surface,&r);
 
-	SDL_UpdateWindowSurface(dest_tex->window);
 
 	return res;
+}
+
+
+void mrender_clear(void){
+	SDLImplWindow *dest_tex = window.internal_state;
+	SDL_UpdateWindowSurface(dest_tex->window);
+	SDL_FillRect( dest_tex->window_surface, NULL, SDL_MapRGBA( dest_tex->window_surface->format, 64, 64, 64, 255 ) );
+
 }
