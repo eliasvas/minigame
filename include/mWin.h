@@ -18,7 +18,7 @@ typedef struct {
 }mWinDesc;
 
 typedef struct {
-    mWinDesc desc;    
+    mWinDesc desc;   
     //specific to each API implementing windows :)
     void *internal_state; 
 } mWin;

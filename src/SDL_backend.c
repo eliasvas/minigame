@@ -26,7 +26,7 @@ M_RESULT mwin_create(mWinDesc *desc, mWin *win){
 		printf("Error initializing SDL: [%s]\n", SDL_GetError());
 		return M_ERR;
 	}
-	sdl_win->window = SDL_CreateWindow( "minigame", desc->x, desc->y, desc->width, desc->height, SDL_WINDOW_SHOWN );
+	sdl_win->window = SDL_CreateWindow( "minigame", desc->x, desc->y, desc->width, desc->height, SDL_WINDOW_SHOWN);
 
 	if ( !sdl_win->window ) {
 		printf("Error creating window: [%s]\n", SDL_GetError());
@@ -41,8 +41,8 @@ M_RESULT mwin_create(mWinDesc *desc, mWin *win){
 	}
 
 
-	SDL_SetWindowResizable(sdl_win->window, desc->opt & MWIN_OPT_RESIZABLE);
-	SDL_SetWindowBordered(sdl_win->window, desc->opt & MWIN_OPT_BORDERED);
+	SDL_SetWindowResizable(sdl_win->window, (desc->opt & MWIN_OPT_RESIZABLE) > 0);
+	SDL_SetWindowBordered(sdl_win->window, (desc->opt & MWIN_OPT_BORDERED) > 0);
 	if (SDL_SetSurfaceBlendMode(sdl_win->window_surface,SDL_BLENDMODE_BLEND) < 0){
 		printf("Error setting blend mode: [%s]\n", SDL_GetError());
 	}
@@ -74,7 +74,28 @@ void minput_update(void)
 {
     MEMCPY(mis.prev_keys,mis.keys, sizeof(mis.keys[0]) * MK_MAX);
 
-	SDL_PumpEvents();
+
+	//SDL_PumpEvents();
+	//Poll all SDL_Events. Because.
+	SDL_Event e;
+	while (SDL_PollEvent(&e)) {
+		switch (e.type) {
+			case SDL_WINDOWEVENT:
+				if(e.window.event == SDL_WINDOWEVENT_RESIZED) {
+					SDLImplWindow *sdl_win = window.internal_state;
+					SDL_Surface* surf = SDL_GetWindowSurface(sdl_win->window);
+					int w, h;
+					SDL_GetWindowSize(sdl_win->window, &w, &h);
+					sdl_win->window_surface = surf;
+					window.desc.width = w;
+					window.desc.height = h;
+				}
+			break;
+			case SDL_QUIT:
+				exit(1);
+			break;
+		}
+	}
 	const u8 *keystate = SDL_GetKeyboardState(NULL);
 
 	for (int i = (MK_A - MK_A); i <= (MK_Z - MK_A); ++i){
@@ -117,6 +138,13 @@ void minput_update(void)
 	}else {
 		mis.keys[MK_MMB] = 0;
 	}
+
+/*
+	//Poll all SDL_Events. Because.
+	SDL_Event e;
+	while (SDL_PollEvent(&e)) {}
+*/
+
 }
 
 
@@ -194,8 +222,7 @@ M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect){
 
 
 void mrender_clear(void){
-	SDLImplWindow *dest_tex = window.internal_state;
-	SDL_UpdateWindowSurface(dest_tex->window);
-	SDL_FillRect( dest_tex->window_surface, NULL, SDL_MapRGBA( dest_tex->window_surface->format, 64, 64, 64, 255 ) );
-
+	SDLImplWindow *sdl_win = window.internal_state;
+	SDL_UpdateWindowSurface(sdl_win->window);
+	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 64, 64, 64, 255 ) );
 }

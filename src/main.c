@@ -36,7 +36,6 @@ void mrender(){
 	mui_draw_char('E', (mRect){300,100,100,100});
 	mui_draw_char('R', (mRect){400,100,100,100});
 
-
 	mui_draw_char('D', (mRect){0,200,200,200});
 	mui_draw_char('I', (mRect){200,200,200,200});
 	mui_draw_char('E', (mRect){400,200,200,200});
@@ -58,7 +57,7 @@ int main(int argc, char** args) {
 			exit(43);
 		mrender();
 		MPROFILER_END()
-		//printf("Execution of tag [%s] : [%f] ms and [%lu] cycles!\n",global_profiler.tags[0].name,global_profiler.tags[0].samples[0],global_profiler.tags[0].cycles[0]); 
+		printf("Execution of tag [%s] : [%f] ms and [%lu] cycles!\n",global_profiler.tags[0].name,global_profiler.tags[0].samples[0],global_profiler.tags[0].cycles[0]); 
 	}
 
 	u64 end_timestamp = mtime_now();
