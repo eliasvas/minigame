@@ -160,7 +160,7 @@ typedef struct {
 void mrend_clear(void){
 	SDLImplWindow *sdl_win = window.internal_state;
 	SDL_UpdateWindowSurface(sdl_win->window);
-	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 64, 64, 64, 255 ) );
+	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 32, 32, 32, 255 ) );
 }
 
 

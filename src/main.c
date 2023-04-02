@@ -21,15 +21,13 @@ void minit(){
 }
 void mupdate(){
 	minput_update();
-	if (mmouse_isect((mRect){100,100,100,100})){
-		printf("INTERSECTION!\n");
-	}
 	//printf("Current time: [%f] seconds\n", mtime_sec(mtime_now()));
 }
 void mrender(){
 	v2 mp = minput_get_mouse_pos();
 
-	mrend_draw_rect((mRect){100,100,100,100}, (mColor){0xFF0000});
+	//mrend_draw_rect((mRect){100,100,100,100}, (mColor){0xFF0000});
+	if (mui_button(__LINE__, (mRect){100,100,100,100}))printf("BUTTON CLICKED!\n");
 
 	mui_draw_char('P', (mRect){0,0,100,100});
 	mui_draw_char('R', (mRect){100,0,100,100});
@@ -63,9 +61,11 @@ int main(int argc, char** args) {
 		mupdate();
 		if (mkey_down(MK_A))
 			exit(43);
+		mui_start();
 		mrender();
+		mui_finish();
 		MPROFILER_END()
-		printf("Execution of tag [%s] : [%f] ms and [%lu] cycles!\n",global_profiler.tags[0].name,global_profiler.tags[0].samples[0],global_profiler.tags[0].cycles[0]); 
+		//printf("Execution of tag [%s] : [%f] ms and [%lu] cycles!\n",global_profiler.tags[0].name,global_profiler.tags[0].samples[0],global_profiler.tags[0].cycles[0]); 
 	}
 
 	u64 end_timestamp = mtime_now();

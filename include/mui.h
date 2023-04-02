@@ -15,8 +15,8 @@ typedef struct {
 
 
 	//should items be controls/widgets????
-	u32 hot_item; //item below da cursor
-	u32 active_item; //item we are inteeracting with
+	i32 hot_item; //item below da cursor
+	i32 active_item; //item we are inteeracting with
 	f32 text_scale;
 }muiState;
 
@@ -42,6 +42,21 @@ static inline void mui_init(void){
 	mui.clip_rect = (mRect){0,0,600,400};
 	//set text scaling
 	mui.text_scale = 1.0f;
+	mui.hot_item = 0;
+	mui.active_item = 0;
+}
+
+static inline void mui_start(void){
+	mui.hot_item = 0;
+}
+static inline void mui_finish(void){
+
+	if (mkey_up(MK_LMB)){
+		mui.active_item = 0;
+	}else {
+		if (mui.active_item == 0)
+			mui.active_item = -1;
+	}
 }
 
 
@@ -58,6 +73,35 @@ b32 mmouse_isect(mRect r){
 	int m_x = minput_get_mouse_pos().x;
 	int m_y = minput_get_mouse_pos().y;
 	return (m_x >= r.x && m_x <= r.x + r.w && m_y >= r.y && m_y <= r.y + r.h);
+}
+
+
+#define MUI_BUTTON_COLOR (mColor){0x040404}
+#define MUI_BUTTON_COLOR_ACTIVE (mColor){0xFF0000}
+#define MUI_BUTTON_COLOR_HOT (mColor){0xCC0000}
+b32 mui_button(u32 id, mRect rect){
+	if (mmouse_isect(rect)){
+		mui.hot_item = id;
+		if (mui.active_item == 0 && mkey_down(MK_LMB)){
+			mui.active_item = id;
+		}
+	}
+
+	if (mui.hot_item == id){
+		if (mui.active_item == id){
+			//button hot and active
+			mrend_draw_rect(rect, MUI_BUTTON_COLOR_ACTIVE);
+		}else {
+			//button hot
+			mrend_draw_rect(rect, MUI_BUTTON_COLOR_HOT);
+		}
+	}else {
+		mrend_draw_rect(rect, MUI_BUTTON_COLOR);
+	}
+
+	if (mkey_up(MK_LMB) && mui.hot_item == id && mui.active_item == id)
+		return 1;
+	return 0;
 }
 
 
