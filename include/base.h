@@ -187,6 +187,4 @@ typedef enum {
 
 
 
-void mrender_clear();
-
 #endif

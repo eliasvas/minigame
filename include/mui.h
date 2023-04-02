@@ -11,6 +11,12 @@
 typedef struct {
 	mRect clip_rect;
 	mTex texture_atlas;
+
+
+
+	//should items be controls/widgets????
+	u32 hot_item; //item below da cursor
+	u32 active_item; //item we are inteeracting with
 	f32 text_scale;
 }muiState;
 
@@ -46,6 +52,14 @@ static inline void mui_draw_char(char l, mRect dest){
 	mRect ltc = {((i32)l % 16) * ppl, ((i32)l / 16) * ppl, MUI_TEXT_SIZE * mui.text_scale, MUI_TEXT_SIZE * mui.text_scale};
 	mtex_render(&mui.texture_atlas, ltc, dest);
 }
+
+
+b32 mmouse_isect(mRect r){
+	int m_x = minput_get_mouse_pos().x;
+	int m_y = minput_get_mouse_pos().y;
+	return (m_x >= r.x && m_x <= r.x + r.w && m_y >= r.y && m_y <= r.y + r.h);
+}
+
 
 
 #endif

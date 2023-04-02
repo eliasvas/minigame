@@ -147,17 +147,44 @@ void minput_update(void)
 
 }
 
-
-
-//TEXTURES
+//RENDERER
+#include "mRend.h"
 #include "mTex.h"
-#include "mqoi.h"
 
 typedef struct {
 	SDL_Surface* image;
 	void *texture_data;
 	SDL_PixelFormat format;
 }SDLImplTexture;
+
+void mrend_clear(void){
+	SDLImplWindow *sdl_win = window.internal_state;
+	SDL_UpdateWindowSurface(sdl_win->window);
+	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 64, 64, 64, 255 ) );
+}
+
+
+void mrend_draw_rect(mRect rect, mColor col){
+	SDLImplWindow *sdl_win = window.internal_state;
+	SDL_Rect r = (SDL_Rect){rect.x, rect.y, rect.w, rect.h};
+	SDL_FillRect(sdl_win->window_surface, &r, col.col);
+}
+
+void mrend_draw_tex(mTex *tex, mRect tex_coords, mRect rect){
+	SDLImplTexture *sdl_tex = tex->internal_state;
+	SDLImplWindow *dest_tex = window.internal_state;
+
+
+	SDL_Rect tc = (SDL_Rect){tex_coords.x, tex_coords.y, tex_coords.w, tex_coords.h};
+	SDL_Rect r = (SDL_Rect){rect.x, rect.y,rect.w, rect.h};
+
+	SDL_BlitScaled(sdl_tex->image,&tc,dest_tex->window_surface,&r);
+}
+
+
+//TEXTURES
+#include "mTex.h"
+#include "mqoi.h"
 
 M_RESULT mtex_create(mTexDesc *desc, void *tex_data, mTex *tex){
 	MEMZERO_STRUCT((mTex*)tex);
@@ -201,28 +228,8 @@ M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect){
 	M_RESULT res = M_OK;
 	SDLImplTexture *sdl_tex = tex->internal_state;
 	SDLImplWindow *dest_tex = window.internal_state;
-
-	SDL_Rect tc = {tex_coords.x, tex_coords.y, tex_coords.w, tex_coords.h};
-	SDL_Rect r = {rect.x, rect.y,rect.w, rect.h};
-	
 	//clip the rect
 	mtex_clip(&tex_coords, &rect, (mRect){0,0,600,400});
-	tc = (SDL_Rect){tex_coords.x, tex_coords.y, tex_coords.w, tex_coords.h};
-	r = (SDL_Rect){rect.x, rect.y,rect.w, rect.h};
-
-	//in the real renderer we should just push the attribs to buffers and do instanced rendering!
-	//printf("rect: [%i,%i,%i,%i]\n", r.x, r.y, r.w + r.x, r.h + r.y);
-	
-	//draw it with our own clipping algorithm :P
-	SDL_BlitScaled(sdl_tex->image,&tc,dest_tex->window_surface,&r);
-
-
+	mrend_draw_tex(tex,tex_coords,rect);
 	return res;
-}
-
-
-void mrender_clear(void){
-	SDLImplWindow *sdl_win = window.internal_state;
-	SDL_UpdateWindowSurface(sdl_win->window);
-	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 64, 64, 64, 255 ) );
 }
