@@ -5,7 +5,15 @@
 #include "mqoi.h"
 
 #define MUI_TEXT_SIZE 16
+#define MUI_BUTTON_SIZE_X 90
+#define MUI_BUTTON_SIZE_Y 60
 
+typedef struct {
+	mColor default_color;
+	mColor hot_color;
+	mColor active_color;
+	mColor border_color;
+}muiStyle;
 
 
 typedef struct {
@@ -18,9 +26,31 @@ typedef struct {
 	i32 hot_item; //item below da cursor
 	i32 active_item; //item we are inteeracting with
 	f32 text_scale;
+
+	iv2 current_widget_pos;
+	mRect current_window_rect;
+
+	muiStyle style;
 }muiState;
 
 static muiState mui;
+
+static inline void mui_style_default(muiStyle *style){
+	style->default_color = (mColor){0x040404};
+	style->hot_color = (mColor){0xFF0000};
+	style->active_color = (mColor){0xCC0000};
+	style->border_color = (mColor){0x585858};
+}
+
+
+static inline void mui_window_begin(mRect r){
+	mui.current_widget_pos = (iv2){r.x, r.y}; //maybe these should be stack based too????
+	mui.current_window_rect = r;
+	
+	mrend_draw_rect(mui.current_window_rect, mui.style.border_color);
+}
+
+static inline void mui_window_end(){}
 
 static inline void mui_init(void){
 	MEMSET(&mui, 0, sizeof(mui));
@@ -44,6 +74,8 @@ static inline void mui_init(void){
 	mui.text_scale = 1.0f;
 	mui.hot_item = 0;
 	mui.active_item = 0;
+
+	mui_style_default(&mui.style);
 }
 
 static inline void mui_start(void){
@@ -76,10 +108,11 @@ b32 mmouse_isect(mRect r){
 }
 
 
-#define MUI_BUTTON_COLOR (mColor){0x040404}
-#define MUI_BUTTON_COLOR_ACTIVE (mColor){0xFF0000}
-#define MUI_BUTTON_COLOR_HOT (mColor){0xCC0000}
-b32 mui_button(u32 id, mRect rect){
+b32 mui_button(u32 id, char *label){
+	mRect rect = (mRect){mui.current_widget_pos.x, mui.current_widget_pos.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
+	//maybe this += should happen after clipping or sth???
+	mui.current_widget_pos.x += MUI_BUTTON_SIZE_X;
+	mui.current_widget_pos.y +=MUI_BUTTON_SIZE_Y;
 	if (mmouse_isect(rect)){
 		mui.hot_item = id;
 		if (mui.active_item == 0 && mkey_down(MK_LMB)){
@@ -90,14 +123,15 @@ b32 mui_button(u32 id, mRect rect){
 	if (mui.hot_item == id){
 		if (mui.active_item == id){
 			//button hot and active
-			mrend_draw_rect(rect, MUI_BUTTON_COLOR_ACTIVE);
+			mrend_draw_rect(rect, mui.style.active_color);
 		}else {
 			//button hot
-			mrend_draw_rect(rect, MUI_BUTTON_COLOR_HOT);
+			mrend_draw_rect(rect, mui.style.hot_color);
 		}
 	}else {
-		mrend_draw_rect(rect, MUI_BUTTON_COLOR);
-	}
+		mrend_draw_rect(rect, mui.style.default_color);
+	} 
+	//layout push / pop
 
 	if (mkey_up(MK_LMB) && mui.hot_item == id && mui.active_item == id)
 		return 1;

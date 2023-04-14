@@ -26,26 +26,11 @@ void mupdate(){
 void mrender(){
 	v2 mp = minput_get_mouse_pos();
 
+	mui_window_begin((mRect){100,100,250,250});
 	//mrend_draw_rect((mRect){100,100,100,100}, (mColor){0xFF0000});
-	if (mui_button(__LINE__, (mRect){100,100,100,100}))printf("BUTTON CLICKED!\n");
+	if (mui_button(__LINE__, "PRIDE"))printf("BUTTON CLICKED!\n");
+	mui_window_end((mRect){100,100,400,400});
 
-	mui_draw_char('P', (mRect){0,0,100,100});
-	mui_draw_char('R', (mRect){100,0,100,100});
-	mui_draw_char('I', (mRect){200,0,100,100});
-	mui_draw_char('D', (mRect){300,0,100,100});
-	mui_draw_char('E', (mRect){400,0,100,100});
-
-
-	mui_draw_char('N', (mRect){0,100,100,100});
-	mui_draw_char('E', (mRect){100,100,100,100});
-	mui_draw_char('V', (mRect){200,100,100,100});
-	mui_draw_char('E', (mRect){300,100,100,100});
-	mui_draw_char('R', (mRect){400,100,100,100});
-
-	mui_draw_char('D', (mRect){0,200,200,200});
-	mui_draw_char('I', (mRect){200,200,200,200});
-	mui_draw_char('E', (mRect){400,200,200,200});
-	
 	mrend_clear();
 }
 
