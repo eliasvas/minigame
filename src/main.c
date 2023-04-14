@@ -28,7 +28,9 @@ void mrender(){
 
 	mui_window_begin((mRect){100,100,250,250});
 	//mrend_draw_rect((mRect){100,100,100,100}, (mColor){0xFF0000});
-	if (mui_button(__LINE__, "PRIDE"))printf("BUTTON CLICKED!\n");
+	if (mui_button(__LINE__, "PRIDE"))printf("PRIDE CLICKED!\n");
+	if (mui_button(__LINE__, "NEVER"))printf("NEVER CLICKED!\n");
+	if (mui_button(__LINE__, "DIES"))printf("DIES CLICKED!\n");
 	mui_window_end((mRect){100,100,400,400});
 
 	mrend_clear();

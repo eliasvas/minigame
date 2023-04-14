@@ -8,6 +8,14 @@
 #define MUI_BUTTON_SIZE_X 90
 #define MUI_BUTTON_SIZE_Y 60
 
+typedef enum {
+	MUI_ALIGN_CENTER,
+	MUI_ALIGN_RIGHT,
+	MUI_ALIGN_LEFT,
+}MUI_ALIGN_OPT;
+//this should be for text? inside layout struct?
+//firstly, lets implement only align center
+
 typedef struct {
 	mColor default_color;
 	mColor hot_color;
@@ -108,10 +116,16 @@ b32 mmouse_isect(mRect r){
 }
 
 
+iv2 mui_get_label_size(char *label){
+	i32 ppl = 16; //pixels per letter
+	return (iv2){mui.text_scale * ppl * strlen(label), mui.text_scale *ppl};
+}
+
+
 b32 mui_button(u32 id, char *label){
 	mRect rect = (mRect){mui.current_widget_pos.x, mui.current_widget_pos.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
 	//maybe this += should happen after clipping or sth???
-	mui.current_widget_pos.x += MUI_BUTTON_SIZE_X;
+	//mui.current_widget_pos.x += MUI_BUTTON_SIZE_X;
 	mui.current_widget_pos.y +=MUI_BUTTON_SIZE_Y;
 	if (mmouse_isect(rect)){
 		mui.hot_item = id;
@@ -131,7 +145,19 @@ b32 mui_button(u32 id, char *label){
 	}else {
 		mrend_draw_rect(rect, mui.style.default_color);
 	} 
+	iv2 label_size = mui_get_label_size(label);
+	//void mui_draw_char(char l, mRect dest);
+	i32 ppl = 16;
+	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - ppl/2};
+	for (int i = 0; i < strlen(label); ++i){
+		mui_draw_char(label[i], (mRect){label_pos.x + i * ppl, label_pos.y,MUI_TEXT_SIZE,MUI_TEXT_SIZE});
+	}
+
 	//layout push / pop
+//layout push / pop
+//layout push / pop
+//layout push / pop
+//layout push / pop
 
 	if (mkey_up(MK_LMB) && mui.hot_item == id && mui.active_item == id)
 		return 1;
