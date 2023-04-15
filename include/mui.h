@@ -7,6 +7,7 @@
 #define MUI_TEXT_SIZE 16
 #define MUI_BUTTON_SIZE_X 90
 #define MUI_BUTTON_SIZE_Y 60
+#define MUI_MAX_LAYOUTS 64
 
 typedef enum {
 	MUI_ALIGN_CENTER,
@@ -15,6 +16,19 @@ typedef enum {
 }MUI_ALIGN_OPT;
 //this should be for text? inside layout struct?
 //firstly, lets implement only align center
+
+typedef enum{
+	MUI_HORIZONTAL_LAYOUT,
+	MUI_VERTICAL_LAYOUT,
+}muiLayoutType;
+
+typedef struct{
+	iv2 start;
+	iv2 size;
+	i32 padding;
+	muiLayoutType type;
+}muiLayout;
+
 
 typedef struct {
 	mColor default_color;
@@ -35,8 +49,11 @@ typedef struct {
 	i32 active_item; //item we are inteeracting with
 	f32 text_scale;
 
-	iv2 current_widget_pos;
-	mRect current_window_rect;
+	//iv2 current_widget_pos;
+	//mRect current_window_rect;
+
+	muiLayout layout_stack[MUI_MAX_LAYOUTS];
+	i32 layout_stack_size;
 
 	muiStyle style;
 }muiState;
@@ -44,21 +61,12 @@ typedef struct {
 static muiState mui;
 
 static inline void mui_style_default(muiStyle *style){
-	style->default_color = (mColor){0x040404};
-	style->hot_color = (mColor){0xFF0000};
+	style->default_color = (mColor){0x343434};
+	style->hot_color = (mColor){0xFF2626};
 	style->active_color = (mColor){0xCC0000};
 	style->border_color = (mColor){0x585858};
 }
 
-
-static inline void mui_window_begin(mRect r){
-	mui.current_widget_pos = (iv2){r.x, r.y}; //maybe these should be stack based too????
-	mui.current_window_rect = r;
-	
-	mrend_draw_rect(mui.current_window_rect, mui.style.border_color);
-}
-
-static inline void mui_window_end(){}
 
 static inline void mui_init(void){
 	MEMSET(&mui, 0, sizeof(mui));
@@ -84,6 +92,7 @@ static inline void mui_init(void){
 	mui.active_item = 0;
 
 	mui_style_default(&mui.style);
+	mui.layout_stack_size = 0;
 }
 
 static inline void mui_start(void){
@@ -99,8 +108,51 @@ static inline void mui_finish(void){
 	}
 }
 
+static inline muiLayout *mui_layout_top(){
+	ASSERT(mui.layout_stack_size > 0);
+	return &mui.layout_stack[mui.layout_stack_size - 1];
+}
 
-//M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect);
+static inline void mui_layout_start(muiLayoutType type, iv2 start){
+	ASSERT(mui.layout_stack_size < MUI_MAX_LAYOUTS);
+	muiLayout layout = {0};
+	layout.padding = 5;
+	layout.type = type;
+	layout.start = start;
+	mui.layout_stack[mui.layout_stack_size++] = layout;
+}
+
+static inline void mui_layout_push(muiLayoutType type){
+	muiLayout *layout = mui_layout_top();
+	mui_layout_start(type, (iv2){layout->start.x, layout->start.y});
+}
+
+
+static inline void mui_layout_pop(void){
+	muiLayout *child_layout = mui_layout_top();
+	mui.layout_stack_size--;
+	if (mui.layout_stack_size > 0){
+		muiLayout *layout = mui_layout_top();
+		if (layout->type == MUI_VERTICAL_LAYOUT){
+			layout->start.y += child_layout->size.y;
+		}else if (layout->type == MUI_HORIZONTAL_LAYOUT){
+			layout->start.x += child_layout->size.x;
+		}
+	}
+	ASSERT(mui.layout_stack_size >= 0);
+}
+
+
+static inline void mui_window_begin(mRect r){
+	mui_layout_start(MUI_VERTICAL_LAYOUT, (iv2){r.x, r.y});
+	
+	mrend_draw_rect(r, mui.style.border_color);
+}
+
+static inline void mui_window_end(){
+	mui_layout_pop();
+}
+
 
 static inline void mui_draw_char(char l, mRect dest){
 	i32 ppl = 16;
@@ -121,12 +173,22 @@ iv2 mui_get_label_size(char *label){
 	return (iv2){mui.text_scale * ppl * strlen(label), mui.text_scale *ppl};
 }
 
-
 b32 mui_button(u32 id, char *label){
-	mRect rect = (mRect){mui.current_widget_pos.x, mui.current_widget_pos.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
-	//maybe this += should happen after clipping or sth???
-	//mui.current_widget_pos.x += MUI_BUTTON_SIZE_X;
-	mui.current_widget_pos.y +=MUI_BUTTON_SIZE_Y;
+
+
+	muiLayout *current_layout = mui_layout_top();
+	mRect rect;
+
+	if (current_layout->type == MUI_HORIZONTAL_LAYOUT){
+		rect = (mRect){current_layout->start.x + current_layout->size.x, current_layout->start.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
+		current_layout->size.x += MUI_BUTTON_SIZE_X + current_layout->padding;
+		current_layout->size.y = MAX(MUI_BUTTON_SIZE_Y + current_layout->padding, current_layout->size.y);
+	}else if (current_layout->type == MUI_VERTICAL_LAYOUT){
+		rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
+		current_layout->size.y += MUI_BUTTON_SIZE_Y + current_layout->padding;
+		current_layout->size.x = MAX(MUI_BUTTON_SIZE_X + current_layout->padding, current_layout->size.x);
+	}
+
 	if (mmouse_isect(rect)){
 		mui.hot_item = id;
 		if (mui.active_item == 0 && mkey_down(MK_LMB)){
@@ -153,11 +215,6 @@ b32 mui_button(u32 id, char *label){
 		mui_draw_char(label[i], (mRect){label_pos.x + i * ppl, label_pos.y,MUI_TEXT_SIZE,MUI_TEXT_SIZE});
 	}
 
-	//layout push / pop
-//layout push / pop
-//layout push / pop
-//layout push / pop
-//layout push / pop
 
 	if (mkey_up(MK_LMB) && mui.hot_item == id && mui.active_item == id)
 		return 1;

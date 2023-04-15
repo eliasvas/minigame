@@ -26,12 +26,28 @@ void mupdate(){
 void mrender(){
 	v2 mp = minput_get_mouse_pos();
 
-	mui_window_begin((mRect){100,100,250,250});
-	//mrend_draw_rect((mRect){100,100,100,100}, (mColor){0xFF0000});
-	if (mui_button(__LINE__, "PRIDE"))printf("PRIDE CLICKED!\n");
-	if (mui_button(__LINE__, "NEVER"))printf("NEVER CLICKED!\n");
-	if (mui_button(__LINE__, "DIES"))printf("DIES CLICKED!\n");
-	mui_window_end((mRect){100,100,400,400});
+	mui_window_begin((mRect){100,100,350,350});
+
+	mui_layout_push(MUI_HORIZONTAL_LAYOUT);
+	if (mui_button(__LINE__, "PRIDE"))printf("PRIDE_0 CLICKED!\n");
+	if (mui_button(__LINE__,"NEVER"))printf("NEVER_0 CLICKED!\n");
+	if (mui_button(__LINE__, "DIES"))printf("DIES_0 CLICKED!\n");
+	mui_layout_pop();
+	
+	mui_layout_push(MUI_HORIZONTAL_LAYOUT);
+	if (mui_button(__LINE__, "PRIDE"))printf("PRIDE_1 CLICKED!\n");
+	if (mui_button(__LINE__,"NEVER"))printf("NEVER_1 CLICKED!\n");
+	if (mui_button(__LINE__, "DIES"))printf("DIES_1 CLICKED!\n");
+	mui_layout_pop();
+	
+	mui_layout_push(MUI_HORIZONTAL_LAYOUT);
+	if (mui_button(__LINE__, "PRIDE"))printf("PRIDE_2 CLICKED!\n");
+	if (mui_button(__LINE__,"NEVER"))printf("NEVER_2 CLICKED!\n");
+	if (mui_button(__LINE__, "DIES"))printf("DIES_2 CLICKED!\n");
+	mui_layout_pop();
+
+	mui_window_end();
+
 
 	mrend_clear();
 }
