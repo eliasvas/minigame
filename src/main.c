@@ -37,16 +37,23 @@ void mrender(){
 	if (mui_button(&m,__LINE__, "DIES"))printf("DIES_0 CLICKED!\n");
 	mui_layout_pop(&m);
 	
-	mui_layout_push(&m,MUI_HORIZONTAL_LAYOUT);
-	if (mui_button(&m,__LINE__, "PRIDE"))printf("PRIDE_1 CLICKED!\n");
-	if (mui_button(&m,__LINE__,"NEVER"))printf("NEVER_1 CLICKED!\n");
-	if (mui_button(&m,__LINE__, "DIES"))printf("DIES_1 CLICKED!\n");
-	mui_layout_pop(&m);
 	
 	mui_layout_push(&m,MUI_HORIZONTAL_LAYOUT);
 	if (mui_button(&m,__LINE__, "PRIDE"))printf("PRIDE_2 CLICKED!\n");
 	if (mui_button(&m,__LINE__,"NEVER"))printf("NEVER_2 CLICKED!\n");
 	if (mui_button(&m,__LINE__, "DIES"))printf("DIES_2 CLICKED!\n");
+	mui_layout_pop(&m);
+
+	mui_layout_push(&m,MUI_HORIZONTAL_LAYOUT);
+	static int val = 6;
+	mui_scrollbar(&m,__LINE__, "SCROLL", &val, 3, 15);
+	char text[256] = {0};
+	sprintf(text, "HOT:%i", m.hot_item);
+	mui_label(&m, __LINE__, text);
+	sprintf(text, "ACT:%i", m.active_item);
+	mui_label(&m, __LINE__, text);
+	sprintf(text, "VAL:%i", val);
+	mui_label(&m, __LINE__, text);
 	mui_layout_pop(&m);
 
 	mui_panel_end(&m);

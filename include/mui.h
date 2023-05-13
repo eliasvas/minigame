@@ -5,8 +5,9 @@
 #include "base.h"
 
 #define MUI_TEXT_SIZE 16
+#define MUI_SCROLL_SIZE 16
 #define MUI_BUTTON_SIZE_X 90
-#define MUI_BUTTON_SIZE_Y 60
+#define MUI_BUTTON_SIZE_Y 40
 #define MUI_MAX_LAYOUTS 64
 
 typedef enum {
@@ -35,6 +36,7 @@ typedef struct {
 	mColor hot_color;
 	mColor active_color;
 	mColor border_color;
+	mColor scroll_bg_color;
 }muiStyle;
 
 typedef struct {
@@ -93,6 +95,7 @@ static inline void mui_load_texture_atlas(muiState *mui){
 
 
 static inline void mui_style_default(muiStyle *style){
+	style->scroll_bg_color = (mColor){0x444444};
 	style->default_color = (mColor){0x343434};
 	style->hot_color = (mColor){0xFF2626};
 	style->active_color = (mColor){0xCC0000};
@@ -186,8 +189,8 @@ b32 mmouse_isect(mRect r){
 
 
 iv2 mui_get_label_size(muiState *mui, char *label){
-	i32 ppl = 16; //pixels per letter
-	return (iv2){mui->text_scale * ppl * strlen(label), mui->text_scale *ppl};
+	i32 ppc = 16; //pixels per character
+	return (iv2){mui->text_scale * ppc * strlen(label), mui->text_scale *ppc};
 }
 
 b32 mui_button(muiState *mui, u32 id, char *label){
@@ -238,6 +241,94 @@ b32 mui_button(muiState *mui, u32 id, char *label){
 	return 0;
 }
 
+b32 mui_scrollbar(muiState *mui, u32 id, char *label, int *val, int min, int max){
+
+	muiLayout *current_layout = mui_layout_top(mui);
+	mRect rect = {0};
+	mRect bar_rect = {0};
+
+	if (current_layout->type == MUI_HORIZONTAL_LAYOUT){
+		rect = (mRect){current_layout->start.x + current_layout->size.x, current_layout->start.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
+		bar_rect = (mRect){current_layout->start.x + current_layout->size.x  + (MUI_BUTTON_SIZE_X-MUI_SCROLL_SIZE) * (((*val)-min) / (f32)(max - min)), current_layout->start.y,MUI_SCROLL_SIZE, MUI_BUTTON_SIZE_Y};
+		current_layout->size.x += MUI_BUTTON_SIZE_X + current_layout->padding;
+		current_layout->size.y = MAX(MUI_BUTTON_SIZE_Y + current_layout->padding, current_layout->size.y);
+	}else if (current_layout->type == MUI_VERTICAL_LAYOUT){
+		rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
+		bar_rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y + (MUI_BUTTON_SIZE_X-MUI_SCROLL_SIZE) * (((*val)-min) / (f32)(max - min)), MUI_SCROLL_SIZE, MUI_BUTTON_SIZE_Y};
+		current_layout->size.y += MUI_BUTTON_SIZE_Y + current_layout->padding;
+		current_layout->size.x = MAX(MUI_BUTTON_SIZE_X + current_layout->padding, current_layout->size.x);
+	}
+
+
+	//this should happen for bar_rect
+	if (mmouse_isect(bar_rect)){
+		mui->hot_item = id;
+		if (mui->active_item == 0 && mui->lmb_down){
+			mui->active_item = id;
+		}
+	}
+
+	mui_draw_rect(mui,rect, mui->style.scroll_bg_color);
+	if (mui->hot_item == id){
+		if (mui->active_item == id){
+			//button hot and active
+			mui_draw_rect(mui,bar_rect, mui->style.active_color);
+		}else {
+			//button hot
+			mui_draw_rect(mui,bar_rect, mui->style.hot_color);
+		}
+	}else {
+		mui_draw_rect(mui,bar_rect, mui->style.default_color);
+	} 
+	iv2 label_size = mui_get_label_size(mui, label);
+	//void mui_draw_char(char l, mRect dest);
+	i32 ppl = 16;
+	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - ppl/2};
+	for (int i = 0; i < strlen(label); ++i){
+		mui_draw_char(mui, label[i], (mRect){label_pos.x + i * ppl, label_pos.y,MUI_TEXT_SIZE,MUI_TEXT_SIZE});
+	}
+
+	//SCETCHY AF
+	if (mui->active_item == id){
+		int m_x = minput_get_mouse_pos().x;
+		m_x = CLAMP(rect.x, m_x, rect.x + rect.w);
+		f32 scroll_percent = (m_x -rect.x) / ((f32)rect.w);
+
+		*val = min + scroll_percent * (max - min);
+	}
+
+
+	if (mui->lmb_up && mui->hot_item == id && mui->active_item == id)
+		return 1;
+	return 0;
+}
+void mui_label(muiState *mui, u32 id, char *label){
+
+
+	muiLayout *current_layout = mui_layout_top(mui);
+	mRect rect;
+
+	if (current_layout->type == MUI_HORIZONTAL_LAYOUT){
+		rect = (mRect){current_layout->start.x + current_layout->size.x, current_layout->start.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
+		current_layout->size.x += MUI_BUTTON_SIZE_X + current_layout->padding;
+		current_layout->size.y = MAX(MUI_BUTTON_SIZE_Y + current_layout->padding, current_layout->size.y);
+	}else if (current_layout->type == MUI_VERTICAL_LAYOUT){
+		rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
+		current_layout->size.y += MUI_BUTTON_SIZE_Y + current_layout->padding;
+		current_layout->size.x = MAX(MUI_BUTTON_SIZE_X + current_layout->padding, current_layout->size.x);
+	}
+
+
+	
+	//void mui_draw_char(char l, mRect dest);
+	
+	iv2 label_size = mui_get_label_size(mui, label);
+	i32 ppl = 16;
+	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - ppl/2};
+	for (int i = 0; i < strlen(label); ++i){
+		mui_draw_char(mui, label[i], (mRect){label_pos.x + i * ppl, label_pos.y,MUI_TEXT_SIZE,MUI_TEXT_SIZE});
+	}
+}
 
 
 #endif
