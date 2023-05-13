@@ -65,7 +65,7 @@ typedef struct {
 #include "mqoi.h"
 static inline void mui_draw_char(muiState *mui, char l, mRect dest){
 	i32 ppl = 16;
-	mRect ltc = {((i32)l % 16) * ppl, ((i32)l / 16) * ppl, MUI_TEXT_SIZE * mui->text_scale, MUI_TEXT_SIZE * mui->text_scale};
+	mRect ltc = {((i32)l % 16) * ppl, ((i32)l / 16) * ppl, MUI_TEXT_SIZE, MUI_TEXT_SIZE};
 	mtex_render(mui->texture_atlas, ltc, dest);
 }
 static inline void mui_input_update(muiState *mui){
@@ -230,9 +230,9 @@ b32 mui_button(muiState *mui, u32 id, char *label){
 	iv2 label_size = mui_get_label_size(mui, label);
 	//void mui_draw_char(char l, mRect dest);
 	i32 ppl = 16;
-	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - ppl/2};
+	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - (ppl/2)*mui->text_scale};
 	for (int i = 0; i < strlen(label); ++i){
-		mui_draw_char(mui, label[i], (mRect){label_pos.x + i * ppl, label_pos.y,MUI_TEXT_SIZE,MUI_TEXT_SIZE});
+		mui_draw_char(mui, label[i], (mRect){label_pos.x + i * ppl * mui->text_scale, label_pos.y,MUI_TEXT_SIZE * mui->text_scale,MUI_TEXT_SIZE* mui->text_scale});
 	}
 
 
@@ -283,22 +283,22 @@ b32 mui_scrollbar(muiState *mui, u32 id, char *label, int *val, int min, int max
 	iv2 label_size = mui_get_label_size(mui, label);
 	//void mui_draw_char(char l, mRect dest);
 	i32 ppl = 16;
-	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - ppl/2};
+	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - (ppl/2)*mui->text_scale};
 	for (int i = 0; i < strlen(label); ++i){
-		mui_draw_char(mui, label[i], (mRect){label_pos.x + i * ppl, label_pos.y,MUI_TEXT_SIZE,MUI_TEXT_SIZE});
+		mui_draw_char(mui, label[i], (mRect){label_pos.x + i * ppl * mui->text_scale, label_pos.y,MUI_TEXT_SIZE * mui->text_scale,MUI_TEXT_SIZE* mui->text_scale});
 	}
 
 	//SCETCHY AF
 	if (mui->active_item == id){
 		int m_x = minput_get_mouse_pos().x;
-		m_x = CLAMP(rect.x, m_x, rect.x + rect.w);
-		f32 scroll_percent = (m_x -rect.x) / ((f32)rect.w);
+		m_x = CLAMP(rect.x, m_x, rect.x + rect.w - MUI_SCROLL_SIZE);
+		f32 scroll_percent = (m_x -rect.x) / ((f32)rect.w - MUI_SCROLL_SIZE);
 
 		*val = min + scroll_percent * (max - min);
 	}
 
 
-	if (mui->lmb_up && mui->hot_item == id && mui->active_item == id)
+	if (mui->active_item == id)
 		return 1;
 	return 0;
 }
@@ -324,9 +324,9 @@ void mui_label(muiState *mui, u32 id, char *label){
 	
 	iv2 label_size = mui_get_label_size(mui, label);
 	i32 ppl = 16;
-	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - ppl/2};
+	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - (ppl/2)*mui->text_scale};
 	for (int i = 0; i < strlen(label); ++i){
-		mui_draw_char(mui, label[i], (mRect){label_pos.x + i * ppl, label_pos.y,MUI_TEXT_SIZE,MUI_TEXT_SIZE});
+		mui_draw_char(mui, label[i], (mRect){label_pos.x + i * ppl * mui->text_scale, label_pos.y,MUI_TEXT_SIZE * mui->text_scale,MUI_TEXT_SIZE* mui->text_scale});
 	}
 }
 

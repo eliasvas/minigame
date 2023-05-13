@@ -12,6 +12,8 @@
 #include "mui.h"
 static mTex t;
 
+static int val = 6;
+
 static muiState m;
 
 
@@ -36,17 +38,17 @@ void mrender(){
 	if (mui_button(&m,__LINE__,"NEVER"))printf("NEVER_0 CLICKED!\n");
 	if (mui_button(&m,__LINE__, "DIES"))printf("DIES_0 CLICKED!\n");
 	mui_layout_pop(&m);
-	
-	
+
 	mui_layout_push(&m,MUI_HORIZONTAL_LAYOUT);
-	if (mui_button(&m,__LINE__, "PRIDE"))printf("PRIDE_2 CLICKED!\n");
-	if (mui_button(&m,__LINE__,"NEVER"))printf("NEVER_2 CLICKED!\n");
-	if (mui_button(&m,__LINE__, "DIES"))printf("DIES_2 CLICKED!\n");
+	if (mui_scrollbar(&m,__LINE__, "TEXT", &val, 5, 20)){
+		m.text_scale = (val / (f32)20)*1.3;
+	}
+	static int val2 = 7;
+	mui_scrollbar(&m,__LINE__, "SLIDER", &val2, 0, 20);
+	if (mui_button(&m,__LINE__, "BUT"))printf("BUT CLICKED!\n");
 	mui_layout_pop(&m);
 
 	mui_layout_push(&m,MUI_HORIZONTAL_LAYOUT);
-	static int val = 6;
-	mui_scrollbar(&m,__LINE__, "SCROLL", &val, 3, 15);
 	char text[256] = {0};
 	sprintf(text, "HOT:%i", m.hot_item);
 	mui_label(&m, __LINE__, text);
