@@ -26,12 +26,11 @@ void minit(){
 }
 void mupdate(){
 	minput_update();
-	//printf("Current time: [%f] seconds\n", mtime_sec(mtime_now()));
 }
 void mrender(){
 	v2 mp = minput_get_mouse_pos();
 
-	mui_panel_begin(&m, (mRect){100,100,350,350});
+	mui_panel_begin(&m, (mRect){100,100,0,0});
 
 	mui_layout_push(&m, MUI_HORIZONTAL_LAYOUT);
 	if (mui_button(&m,__LINE__, "PRIDE"))printf("PRIDE_0 CLICKED!\n");
@@ -40,11 +39,11 @@ void mrender(){
 	mui_layout_pop(&m);
 
 	mui_layout_push(&m,MUI_HORIZONTAL_LAYOUT);
-	if (mui_scrollbar(&m,__LINE__, "TEXT", &val, 5, 20)){
+	if (mui_slider(&m,__LINE__, "TEXT", &val, 5, 20)){
 		m.text_scale = (val / (f32)20)*1.3;
 	}
 	static int val2 = 7;
-	mui_scrollbar(&m,__LINE__, "SLIDER", &val2, 0, 20);
+	mui_slider(&m,__LINE__, "SLIDER", &val2, 0, 20);
 	if (mui_button(&m,__LINE__, "BUT"))printf("BUT CLICKED!\n");
 	mui_layout_pop(&m);
 

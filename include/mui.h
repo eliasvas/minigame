@@ -1,5 +1,11 @@
 #ifndef MUI_H
-#define MQUI_H
+#define MUI_H
+
+//MUI works in 3 steps..
+//1. First pass, All commands are captured in a command buffer to know the exact ui we need to draw
+//2. n passes, All commands are processed (for now this just calcs the panel's coords )
+//3. last pass, All commands are rendered to final output
+
 
 //base is used only for vector and rect types
 #include "base.h"
@@ -9,6 +15,7 @@
 #define MUI_BUTTON_SIZE_X 90
 #define MUI_BUTTON_SIZE_Y 40
 #define MUI_MAX_LAYOUTS 64
+#define MUI_MAX_COMMANDS 64
 
 typedef enum {
 	MUI_ALIGN_CENTER,
@@ -39,6 +46,46 @@ typedef struct {
 	mColor scroll_bg_color;
 }muiStyle;
 
+
+
+
+typedef enum {
+	MUI_WIDGET_BUTTON = 1,
+	MUI_WIDGET_LABEL,
+	MUI_WIDGET_SLIDER,
+}muiWidgetType;
+
+typedef enum {
+	MUI_CMD_PUSH_LAYOUT=1,
+	MUI_CMD_POP_LAYOUT,
+	MUI_CMD_PUSH_WIDGET,
+	MUI_CMD_PUSH_PANEL, //for new panels (add windows? popups? later)
+	MUI_CMD_POP_PANEL,
+	//MUI_CMD_CLIP???
+}muiCommandType;
+typedef struct{
+	char label[32]; //label e.g for buttons and stuff
+	muiWidgetType type;
+	int* slider_ptr;
+	int slider_min;
+	int slider_max;
+}muiWidgetData;
+
+//tagged union for mui commands
+typedef struct {
+	u32 id; //TODO this id should only exist for widgets? no?
+	union cmd{
+		muiLayoutType layout;
+		mRect panel;
+		muiWidgetData widget_data;
+		
+		//for widgets we dont currently need any info? at most a label
+	}data;
+	muiCommandType type;
+}muiCommand;
+
+
+
 typedef struct {
 	mRect clip_rect;
 	void *texture_atlas;
@@ -54,11 +101,12 @@ typedef struct {
 	muiLayout layout_stack[MUI_MAX_LAYOUTS];
 	i32 layout_stack_size;
 
+
+	muiCommand cmd_buf[MUI_MAX_COMMANDS];
+	u32 cmd_count;
+
 	muiStyle style;
 }muiState;
-
-
-
 
 //These need to be implemented by each app using mui
 #include "mTex.h"
@@ -120,25 +168,15 @@ static inline void mui_init(muiState *mui){
 }
 
 
-static inline void mui_start(muiState *mui){
-	mui->hot_item = 0;
-	mui_input_update(mui);
-}
-static inline void mui_finish(muiState *mui){
-	if (mui->lmb_up){
-		mui->active_item = 0;
-	}else {
-		if (mui->active_item == 0)
-			mui->active_item = -1;
-	}
-}
+
+//LAYOUT
 
 static inline muiLayout *mui_layout_top(muiState *mui){
 	ASSERT(mui->layout_stack_size > 0);
 	return &mui->layout_stack[mui->layout_stack_size - 1];
 }
 
-static inline void mui_layout_start(muiState *mui,muiLayoutType type, iv2 start){
+static inline void mui_layout_start_imm(muiState *mui,muiLayoutType type, iv2 start){
 	ASSERT(mui->layout_stack_size < MUI_MAX_LAYOUTS);
 	muiLayout layout = {0};
 	layout.padding = 5;
@@ -147,13 +185,13 @@ static inline void mui_layout_start(muiState *mui,muiLayoutType type, iv2 start)
 	mui->layout_stack[mui->layout_stack_size++] = layout;
 }
 
-static inline void mui_layout_push(muiState *mui, muiLayoutType type){
+static inline void mui_layout_push_imm(muiState *mui, muiLayoutType type){
 	muiLayout *layout = mui_layout_top(mui);
-	mui_layout_start(mui, type, (iv2){layout->start.x, layout->start.y});
+	mui_layout_start_imm(mui, type, (iv2){layout->start.x, layout->start.y});
 }
 
 
-static inline void mui_layout_pop(muiState *mui){
+static inline void mui_layout_pop_imm(muiState *mui){
 	muiLayout *child_layout = mui_layout_top(mui);
 	mui->layout_stack_size--;
 	if (mui->layout_stack_size > 0){
@@ -168,18 +206,24 @@ static inline void mui_layout_pop(muiState *mui){
 }
 
 
-static inline void mui_panel_begin(muiState *mui, mRect r){
-	mui_layout_start(mui, MUI_VERTICAL_LAYOUT, (iv2){r.x, r.y});
-	
+
+
+
+//PANEL
+
+static inline void mui_panel_begin_imm(muiState *mui, mRect r){
+	mui_layout_start_imm(mui, MUI_VERTICAL_LAYOUT, (iv2){r.x, r.y});
+	r = (mRect){r.x - 5, r.y - 5, r.w + 5, r.h + 5};
 	mui_draw_rect(mui,r, mui->style.border_color);
 }
 
-static inline void mui_panel_end(muiState *mui){
-	mui_layout_pop(mui);
+static inline void mui_panel_end_imm(muiState *mui){
+	mui_layout_pop_imm(mui);
 }
 
 
 
+//CONTROLS
 
 b32 mmouse_isect(mRect r){
 	int m_x = minput_get_mouse_pos().x;
@@ -193,12 +237,9 @@ iv2 mui_get_label_size(muiState *mui, char *label){
 	return (iv2){mui->text_scale * ppc * strlen(label), mui->text_scale *ppc};
 }
 
-b32 mui_button(muiState *mui, u32 id, char *label){
-
-
+static inline mRect mui_layout_advance_button_imm(muiState *mui){
+	mRect rect = {0};
 	muiLayout *current_layout = mui_layout_top(mui);
-	mRect rect;
-
 	if (current_layout->type == MUI_HORIZONTAL_LAYOUT){
 		rect = (mRect){current_layout->start.x + current_layout->size.x, current_layout->start.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
 		current_layout->size.x += MUI_BUTTON_SIZE_X + current_layout->padding;
@@ -208,6 +249,11 @@ b32 mui_button(muiState *mui, u32 id, char *label){
 		current_layout->size.y += MUI_BUTTON_SIZE_Y + current_layout->padding;
 		current_layout->size.x = MAX(MUI_BUTTON_SIZE_X + current_layout->padding, current_layout->size.x);
 	}
+	return rect;
+}
+
+b32 mui_button_imm(muiState *mui, u32 id, char *label){
+	mRect rect =  mui_layout_advance_button_imm(mui);
 
 	if (mmouse_isect(rect)){
 		mui->hot_item = id;
@@ -241,23 +287,19 @@ b32 mui_button(muiState *mui, u32 id, char *label){
 	return 0;
 }
 
-b32 mui_scrollbar(muiState *mui, u32 id, char *label, int *val, int min, int max){
+
+b32 mui_slider_imm(muiState *mui, u32 id, char *label, int *val, int min, int max){
 
 	muiLayout *current_layout = mui_layout_top(mui);
-	mRect rect = {0};
 	mRect bar_rect = {0};
 
 	if (current_layout->type == MUI_HORIZONTAL_LAYOUT){
-		rect = (mRect){current_layout->start.x + current_layout->size.x, current_layout->start.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
 		bar_rect = (mRect){current_layout->start.x + current_layout->size.x  + (MUI_BUTTON_SIZE_X-MUI_SCROLL_SIZE) * (((*val)-min) / (f32)(max - min)), current_layout->start.y,MUI_SCROLL_SIZE, MUI_BUTTON_SIZE_Y};
-		current_layout->size.x += MUI_BUTTON_SIZE_X + current_layout->padding;
-		current_layout->size.y = MAX(MUI_BUTTON_SIZE_Y + current_layout->padding, current_layout->size.y);
 	}else if (current_layout->type == MUI_VERTICAL_LAYOUT){
-		rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
 		bar_rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y + (MUI_BUTTON_SIZE_X-MUI_SCROLL_SIZE) * (((*val)-min) / (f32)(max - min)), MUI_SCROLL_SIZE, MUI_BUTTON_SIZE_Y};
-		current_layout->size.y += MUI_BUTTON_SIZE_Y + current_layout->padding;
-		current_layout->size.x = MAX(MUI_BUTTON_SIZE_X + current_layout->padding, current_layout->size.x);
 	}
+	
+	mRect rect =  mui_layout_advance_button_imm(mui);
 
 
 	//this should happen for bar_rect
@@ -298,30 +340,11 @@ b32 mui_scrollbar(muiState *mui, u32 id, char *label, int *val, int min, int max
 	}
 
 
-	if (mui->active_item == id)
-		return 1;
 	return 0;
 }
-void mui_label(muiState *mui, u32 id, char *label){
+void mui_label_imm(muiState *mui, u32 id, char *label){
+	mRect rect =  mui_layout_advance_button_imm(mui);
 
-
-	muiLayout *current_layout = mui_layout_top(mui);
-	mRect rect;
-
-	if (current_layout->type == MUI_HORIZONTAL_LAYOUT){
-		rect = (mRect){current_layout->start.x + current_layout->size.x, current_layout->start.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
-		current_layout->size.x += MUI_BUTTON_SIZE_X + current_layout->padding;
-		current_layout->size.y = MAX(MUI_BUTTON_SIZE_Y + current_layout->padding, current_layout->size.y);
-	}else if (current_layout->type == MUI_VERTICAL_LAYOUT){
-		rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
-		current_layout->size.y += MUI_BUTTON_SIZE_Y + current_layout->padding;
-		current_layout->size.x = MAX(MUI_BUTTON_SIZE_X + current_layout->padding, current_layout->size.x);
-	}
-
-
-	
-	//void mui_draw_char(char l, mRect dest);
-	
 	iv2 label_size = mui_get_label_size(mui, label);
 	i32 ppl = 16;
 	iv2 label_pos = (iv2){rect.x - (label_size.x - rect.w)/(f32)2, rect.y + rect.h/2 - (ppl/2)*mui->text_scale};
@@ -331,4 +354,187 @@ void mui_label(muiState *mui, u32 id, char *label){
 }
 
 
+static void mui_cmd_push(muiState *mui, muiCommand cmd);
+
+static inline void mui_layout_push(muiState *mui, muiLayoutType type){
+	muiCommand c = {0};
+	c.type = MUI_CMD_PUSH_LAYOUT;
+	c.data.layout = type;
+	mui_cmd_push(mui, c);
+}
+
+static inline void mui_layout_pop(muiState *mui){
+	muiCommand c = {0};
+	c.type = MUI_CMD_POP_LAYOUT;
+	mui_cmd_push(mui, c);
+}
+
+void mui_label(muiState *mui, u32 id, char *label){
+	muiCommand c = {0};
+	c.id = id;
+	c.type = MUI_CMD_PUSH_WIDGET;
+	if (label)
+		memcpy(c.data.widget_data.label, label, strlen(label));
+	c.data.widget_data.type = MUI_WIDGET_LABEL;
+	mui_cmd_push(mui, c);
+}
+
+b32 mui_button(muiState *mui, u32 id, char *label){
+	muiCommand c = {0};
+	c.id = id;
+	c.type = MUI_CMD_PUSH_WIDGET;
+	if (label)
+		memcpy(c.data.widget_data.label, label, strlen(label));
+	c.data.widget_data.type = MUI_WIDGET_BUTTON;
+	mui_cmd_push(mui, c);
+
+	//printf("HOT: %i", mui->hot_item);
+	if (mui->lmb_up && mui->hot_item == id && mui->active_item == id)
+		return 1;
+	return 0;
+}
+
+b32 mui_slider(muiState *mui, u32 id, char *label, int *val, int min, int max){
+	muiCommand c = {0};
+	c.id = id;
+	c.type = MUI_CMD_PUSH_WIDGET;
+	if (label)
+		memcpy(c.data.widget_data.label, label, strlen(label));
+	c.data.widget_data.type = MUI_WIDGET_SLIDER;
+	c.data.widget_data.slider_ptr = val;
+	c.data.widget_data.slider_min = min;
+	c.data.widget_data.slider_max = max;
+	mui_cmd_push(mui, c);
+
+
+	if (mui->hot_item == id && mui->active_item == id)
+		return 1;
+	return 0;
+}
+
+static inline void mui_panel_begin(muiState *mui, mRect r){
+	muiCommand c = {0};
+	c.type = MUI_CMD_PUSH_PANEL;
+	c.data.panel = r;
+	mui_cmd_push(mui, c);
+}
+static inline void mui_panel_end(muiState *mui){
+	muiCommand c = {0};
+	c.type = MUI_CMD_POP_PANEL;
+	mui_cmd_push(mui, c);
+}
+
+
+
+
+
+
+
+//CMD BUFF
+
+static inline void mui_cmd_push(muiState *mui, muiCommand cmd){
+	ASSERT(mui->cmd_count <= MUI_MAX_COMMANDS);
+	mui->cmd_buf[mui->cmd_count++] = cmd;
+}
+
+static inline void mui_cmd_clear(muiState *mui){
+	mui->cmd_count = 0;
+}
+
+
+static inline void mui_cmd_calc_panel_rects(muiState *mui){
+	mRect *current_panel_rect;
+	for (u32 i = 0; i < mui->cmd_count; ++i)
+	{
+		muiCommand c = mui->cmd_buf[i];
+
+		switch (c.type){
+			case MUI_CMD_PUSH_PANEL:	
+				mui_layout_start_imm(mui, MUI_VERTICAL_LAYOUT, (iv2){mui->cmd_buf[i].data.panel.x, mui->cmd_buf[i].data.panel.y});
+				current_panel_rect = &mui->cmd_buf[i].data.panel;
+				current_panel_rect->w = 0;
+				current_panel_rect->h = 0;
+				break;
+			case MUI_CMD_POP_PANEL:
+				mui_panel_end_imm(mui);
+				break;
+			case MUI_CMD_PUSH_LAYOUT:
+				mui_layout_push_imm(mui, c.data.layout);
+				break;
+			case MUI_CMD_POP_LAYOUT:
+				mui_layout_pop_imm(mui);
+				break;
+			case MUI_CMD_PUSH_WIDGET:
+				mRect r = mui_layout_advance_button_imm(mui);
+				
+				muiLayout *current_layout = mui_layout_top(mui);
+				int current_max_width = current_layout->start.x + current_layout->size.x;
+				int current_max_height = current_layout->start.y + current_layout->size.y;
+				current_panel_rect->w = MAX(current_panel_rect->w, current_max_width - current_panel_rect->x);
+				current_panel_rect->h = MAX(current_panel_rect->h, current_max_height - current_panel_rect->y);
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+//renders the current ui captured in the commands, for now this is done 
+//in linear fashion, almost immediate style
+static inline void mui_cmd_update(muiState *mui){
+	mui_cmd_calc_panel_rects(mui);
+	for (u32 i = 0; i < mui->cmd_count; ++i)
+	{
+		muiCommand c = mui->cmd_buf[i];
+
+		switch (c.type){
+			case MUI_CMD_PUSH_PANEL:
+				mui_panel_begin_imm(mui, c.data.panel);
+				break;
+			case MUI_CMD_POP_PANEL:
+				mui_panel_end_imm(mui);
+				break;
+			case MUI_CMD_PUSH_LAYOUT:
+				mui_layout_push_imm(mui, c.data.layout);
+				break;
+			case MUI_CMD_POP_LAYOUT:
+				mui_layout_pop_imm(mui);
+				break;
+			case MUI_CMD_PUSH_WIDGET:
+				switch(c.data.widget_data.type){
+					case MUI_WIDGET_BUTTON:
+						mui_button_imm(mui, c.id, c.data.widget_data.label);
+						break;
+					case MUI_WIDGET_LABEL:
+						mui_label_imm(mui, c.id, c.data.widget_data.label);
+						break;
+					case MUI_WIDGET_SLIDER:
+						static int plchldr = 4;
+						mui_slider_imm(mui, c.id, c.data.widget_data.label,c.data.widget_data.slider_ptr, c.data.widget_data.slider_min, c.data.widget_data.slider_max);
+						break;
+					default:
+						break;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+static inline void mui_start(muiState *mui){
+	mui->cmd_count = 0;
+	mui_input_update(mui);
+}
+static inline void mui_finish(muiState *mui){
+	mui->hot_item = 0;
+	mui_cmd_update(mui);
+
+	if (mui->lmb_up){
+		mui->active_item = 0;
+	}else {
+		if (mui->active_item == 0)
+			mui->active_item = -1;
+	}
+}
 #endif
