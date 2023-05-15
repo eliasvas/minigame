@@ -30,7 +30,7 @@ void mupdate(){
 void mrender(){
 	v2 mp = minput_get_mouse_pos();
 
-	mui_panel_begin(&m, (mRect){100,100,0,0});
+	mui_panel_begin(&m, (iv2){100,100});
 
 	mui_layout_push(&m, MUI_HORIZONTAL_LAYOUT);
 	if (mui_button(&m,__LINE__, "PRIDE"))printf("PRIDE_0 CLICKED!\n");
@@ -44,7 +44,8 @@ void mrender(){
 	}
 	static int val2 = 7;
 	mui_slider(&m,__LINE__, "SLIDER", &val2, 0, 20);
-	if (mui_button(&m,__LINE__, "BUT"))printf("BUT CLICKED!\n");
+	static b32 state = 0;
+	if (mui_checkbox(&m,__LINE__, "BUT", &state))printf("BUT CLICKED!\n");
 	mui_layout_pop(&m);
 
 	mui_layout_push(&m,MUI_HORIZONTAL_LAYOUT);
