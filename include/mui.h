@@ -216,8 +216,11 @@ static inline void mui_layout_pop_imm(muiState *mui){
 
 static inline void mui_panel_begin_imm(muiState *mui, mRect r){
 	mui_layout_start_imm(mui, MUI_VERTICAL_LAYOUT, (iv2){r.x, r.y});
-	r = (mRect){r.x - 5, r.y - 5, r.w + 5, r.h + 5};
-	mui_draw_rect(mui,r, mui->style.border_color);
+	f32 pad = mui_layout_top(mui)->padding;
+	mRect r1 = (mRect){r.x - pad, r.y - pad, r.w + pad*2, r.h + pad*2};
+	mui_draw_rect(mui,r1, mui->style.checkbox_border_color);
+	mRect r2 = (mRect){r.x - pad/2, r.y - pad/2, r.w + pad, r.h + pad};;
+	mui_draw_rect(mui,r2, mui->style.border_color);
 }
 
 static inline void mui_panel_end_imm(muiState *mui){
@@ -507,6 +510,8 @@ static inline void mui_cmd_calc_panel_rects(muiState *mui){
 				current_panel_rect->h = 0;
 				break;
 			case MUI_CMD_POP_PANEL:
+				current_panel_rect->w -= mui_layout_top(mui)->padding;
+				current_panel_rect->h -= mui_layout_top(mui)->padding;
 				mui_panel_end_imm(mui);
 				break;
 			case MUI_CMD_PUSH_LAYOUT:
