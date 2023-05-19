@@ -1,6 +1,22 @@
 #include <SDL2/SDL.h>
-
+#include <SDL2/SDL_mixer.h>
 #include "base.h"
+
+M_RESULT mbackend_init(void){
+	if ( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ) {
+		printf("Error initializing SDL: [%s]\n", SDL_GetError());
+		return M_ERR;
+	}
+	i32 audio_rate = 22050;
+	u16 audio_format = AUDIO_S16SYS;
+	i32 audio_channels = 2;
+	i32 audio_buffers = 4096;
+	if(Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) != 0){
+		printf("Error initializing SDL audio: [%s]\n", Mix_GetError());
+		return M_ERR;
+	}
+	return M_OK;
+}
 
 //WINDOW IMPLEMENTATION
 #include "mWin.h"
@@ -21,11 +37,6 @@ M_RESULT mwin_create(mWinDesc *desc, mWin *win){
 	SDLImplWindow *sdl_win = malloc(sizeof(SDLImplWindow));
 	MEMZERO_STRUCT(sdl_win);
 
-	//should SDL_Init have its own API????
-	if ( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ) {
-		printf("Error initializing SDL: [%s]\n", SDL_GetError());
-		return M_ERR;
-	}
 	sdl_win->window = SDL_CreateWindow( "minigame", desc->x, desc->y, desc->width, desc->height, SDL_WINDOW_SHOWN);
 
 	if ( !sdl_win->window ) {
@@ -232,4 +243,34 @@ M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect){
 	mtex_clip(&tex_coords, &rect, (mRect){0,0,600,400});
 	mrend_draw_tex(tex,tex_coords,rect);
 	return res;
+}
+
+
+//AUDIO
+#include "mSound.h"
+
+M_RESULT msound_load(mSoundDesc *desc, mSound *s){
+	Mix_Chunk *sound = NULL;
+	sound = Mix_LoadWAV(desc->filename);
+	if(sound == NULL)
+	{
+		printf("Couldn't load sound file: %s\n", Mix_GetError());
+		return M_ERR;
+	}
+	s->desc = *desc;
+	s->internal_state = sound;
+}
+
+M_RESULT msound_play(mSound *s){
+	Mix_Chunk *sound = (Mix_Chunk*)(s->internal_state);
+	i32 channel;
+	channel = Mix_PlayChannel(-1, sound, 0);
+	return M_OK;
+}
+
+M_RESULT msound_destroy(mSound *s){
+	Mix_Chunk *sound = (Mix_Chunk*)(s->internal_state);
+	Mix_FreeChunk(sound); 
+	memset(s, 0, sizeof(mSound));
+	return M_OK;
 }

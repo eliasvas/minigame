@@ -27,4 +27,7 @@ mWin* mwin_get_instance(void);
 M_RESULT mwin_create(mWinDesc *desc, mWin *win);
 M_RESULT mwin_destroy(mWin *win);
 
+//TODO maybe this should go in a "core" module
+M_RESULT mbackend_init(void);
+
 #endif
