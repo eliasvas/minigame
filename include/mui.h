@@ -231,14 +231,14 @@ static inline void mui_panel_end_imm(muiState *mui){
 
 //CONTROLS
 
-b32 mmouse_isect(mRect r){
+static inline b32 mmouse_isect(mRect r){
 	int m_x = minput_get_mouse_pos().x;
 	int m_y = minput_get_mouse_pos().y;
 	return (m_x >= r.x && m_x <= r.x + r.w && m_y >= r.y && m_y <= r.y + r.h);
 }
 
 
-iv2 mui_get_label_size(muiState *mui, char *label){
+static inline iv2 mui_get_label_size(muiState *mui, char *label){
 	i32 ppc = 16; //pixels per character
 	return (iv2){mui->text_scale * ppc * strlen(label), mui->text_scale *ppc};
 }
@@ -258,7 +258,7 @@ static inline mRect mui_layout_advance_button_imm(muiState *mui){
 	return rect;
 }
 
-b32 mui_button_imm(muiState *mui, u32 id, char *label){
+static inline b32 mui_button_imm(muiState *mui, u32 id, char *label){
 	mRect rect =  mui_layout_advance_button_imm(mui);
 
 	if (mmouse_isect(rect)){
@@ -293,7 +293,7 @@ b32 mui_button_imm(muiState *mui, u32 id, char *label){
 	return 0;
 }
 
-b32 mui_checkbox_imm(muiState *mui, u32 id, char *label, b32 *onoff){
+static inline b32 mui_checkbox_imm(muiState *mui, u32 id, char *label, b32 *onoff){
 	mRect rect =  mui_layout_advance_button_imm(mui);
 	mui_draw_rect(mui,rect, mui->style.checkbox_border_color);
 
@@ -329,7 +329,7 @@ b32 mui_checkbox_imm(muiState *mui, u32 id, char *label, b32 *onoff){
 	return 0;
 }
 
-b32 mui_slider_imm(muiState *mui, u32 id, char *label, int *val, int min, int max){
+static inline b32 mui_slider_imm(muiState *mui, u32 id, char *label, int *val, int min, int max){
 
 	muiLayout *current_layout = mui_layout_top(mui);
 	mRect bar_rect = {0};
@@ -383,7 +383,7 @@ b32 mui_slider_imm(muiState *mui, u32 id, char *label, int *val, int min, int ma
 
 	return 0;
 }
-void mui_label_imm(muiState *mui, u32 id, char *label){
+static inline void mui_label_imm(muiState *mui, u32 id, char *label){
 	mRect rect =  mui_layout_advance_button_imm(mui);
 
 	iv2 label_size = mui_get_label_size(mui, label);
@@ -410,7 +410,7 @@ static inline void mui_layout_pop(muiState *mui){
 	mui_cmd_push(mui, c);
 }
 
-void mui_label(muiState *mui, u32 id, char *label){
+static inline void mui_label(muiState *mui, u32 id, char *label){
 	muiCommand c = {0};
 	c.id = id;
 	c.type = MUI_CMD_PUSH_WIDGET;
@@ -420,7 +420,7 @@ void mui_label(muiState *mui, u32 id, char *label){
 	mui_cmd_push(mui, c);
 }
 
-b32 mui_button(muiState *mui, u32 id, char *label){
+static inline b32 mui_button(muiState *mui, u32 id, char *label){
 	muiCommand c = {0};
 	c.id = id;
 	c.type = MUI_CMD_PUSH_WIDGET;
@@ -435,7 +435,7 @@ b32 mui_button(muiState *mui, u32 id, char *label){
 	return 0;
 }
 
-b32 mui_checkbox(muiState *mui, u32 id, char *label, b32 *onoff){
+static inline b32 mui_checkbox(muiState *mui, u32 id, char *label, b32 *onoff){
 	muiCommand c = {0};
 	c.id = id;
 	c.type = MUI_CMD_PUSH_WIDGET;
@@ -451,7 +451,7 @@ b32 mui_checkbox(muiState *mui, u32 id, char *label, b32 *onoff){
 	return 0;
 }
 
-b32 mui_slider(muiState *mui, u32 id, char *label, int *val, int min, int max){
+static inline b32 mui_slider(muiState *mui, u32 id, char *label, int *val, int min, int max){
 	muiCommand c = {0};
 	c.id = id;
 	c.type = MUI_CMD_PUSH_WIDGET;

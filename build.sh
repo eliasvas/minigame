@@ -1,1 +1,1 @@
-gcc -g -std=gnu99 -DENABLE_ASSERT -Iinclude/ src/main.c src/mAlloc.c src/mProfiler.c src/SDL_backend.c -o build/game -lSDL2main -lSDL2 -lSDL2_mixer -lm
+gcc -g -std=gnu99 -DENABLE_ASSERT -Iinclude/ src/mg.c src/main.c src/mAlloc.c src/mProfiler.c src/SDL_backend.c -o build/game -lSDL2main -lSDL2 -lSDL2_mixer -lm
