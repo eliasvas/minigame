@@ -12,8 +12,8 @@
 
 #define MUI_TEXT_SIZE 16
 #define MUI_SCROLL_SIZE 16
-#define MUI_BUTTON_SIZE_X 90
-#define MUI_BUTTON_SIZE_Y 40
+#define MUI_BUTTON_SIZE_X 90 * 1.3
+#define MUI_BUTTON_SIZE_Y 40 * 1.3
 #define MUI_MAX_LAYOUTS 64
 #define MUI_MAX_COMMANDS 64
 
@@ -332,17 +332,8 @@ static inline b32 mui_checkbox_imm(muiState *mui, u32 id, char *label, b32 *onof
 static inline b32 mui_slider_imm(muiState *mui, u32 id, char *label, int *val, int min, int max){
 
 	muiLayout *current_layout = mui_layout_top(mui);
-	mRect bar_rect = {0};
-
-	if (current_layout->type == MUI_HORIZONTAL_LAYOUT){
-		bar_rect = (mRect){current_layout->start.x + current_layout->size.x  + (MUI_BUTTON_SIZE_X-MUI_SCROLL_SIZE) * (((*val)-min) / (f32)(max - min)), current_layout->start.y,MUI_SCROLL_SIZE, MUI_BUTTON_SIZE_Y};
-	}else if (current_layout->type == MUI_VERTICAL_LAYOUT){
-		bar_rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y + (MUI_BUTTON_SIZE_X-MUI_SCROLL_SIZE) * (((*val)-min) / (f32)(max - min)), MUI_SCROLL_SIZE, MUI_BUTTON_SIZE_Y};
-	}
-	
+	mRect bar_rect = (mRect){current_layout->start.x + current_layout->size.x  + (MUI_BUTTON_SIZE_X-MUI_SCROLL_SIZE) * (((*val)-min) / (f32)(max - min)), current_layout->start.y,MUI_SCROLL_SIZE, MUI_BUTTON_SIZE_Y};
 	mRect rect =  mui_layout_advance_button_imm(mui);
-
-
 	//this should happen for bar_rect
 	if (mmouse_isect(bar_rect)){
 		mui->hot_item = id;

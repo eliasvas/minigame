@@ -28,8 +28,13 @@ void minit(){
 
 }
 void mupdate(){
+static u64 prev_time;
+	u64 current_time = mtime_now();
+	f64 dt = mtime_sec(current_time - prev_time);
+	prev_time = mtime_now();
+	//printf("dt: [%lf]\n", dt);
 	minput_update();
-	mg_update(0);
+	mg_update(dt);
 }
 void mrender(){
 	mg_render();
@@ -46,8 +51,6 @@ int main(int argc, char** args) {
 	while (1){
 		MPROFILER_START("update");
 		mupdate();
-		if (mkey_down(MK_A))
-			exit(43);
 		mui_start(&m);
 		mrender();
 		mui_finish(&m);

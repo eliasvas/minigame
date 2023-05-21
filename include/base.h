@@ -115,7 +115,7 @@ typedef struct {
 #define da_deln(a,i,n)   (memmove(&(a)[i], &(a)[(i)+(n)], sizeof *(a) * (da_hdr(a)->len-(n)-(i))), da_hdr(a)->len -= (n))
 #define da_delswap(a,i)  ((a)[i] = da_last(a), da_hdr(a)->len -= 1)
 #define da_free(a)       ((void) ((a) ? DA_FREE(NULL,da_hdr(a)) : (void)0), (a)=NULL)
-inline void *da_growf(void *a, size_t elemsize, size_t addlen, size_t min_cap){
+static inline void *da_growf(void *a, size_t elemsize, size_t addlen, size_t min_cap){
   da_header temp={0}; // force debugging
   void *b;
   size_t min_len = da_len(a) + addlen;
@@ -142,7 +142,7 @@ inline void da_freef(void *a){
 
 
 //RNG
-inline u64 xorshift64(u64 state[])
+static inline u64 xorshift64(u64 state[])
 {
   u64 x = state[0];
   x ^= x << 13;

@@ -171,7 +171,7 @@ typedef struct {
 void mrend_clear(void){
 	SDLImplWindow *sdl_win = window.internal_state;
 	SDL_UpdateWindowSurface(sdl_win->window);
-	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 32, 32, 32, 255 ) );
+	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 16, 16, 16, 255 ) );
 }
 
 
@@ -240,7 +240,7 @@ M_RESULT mtex_render(mTex *tex, mRect tex_coords, mRect rect){
 	SDLImplTexture *sdl_tex = tex->internal_state;
 	SDLImplWindow *dest_tex = window.internal_state;
 	//clip the rect
-	mtex_clip(&tex_coords, &rect, (mRect){0,0,600,400});
+	mtex_clip(&tex_coords, &rect, (mRect){0,0,600,600});
 	mrend_draw_tex(tex,tex_coords,rect);
 	return res;
 }
