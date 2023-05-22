@@ -368,10 +368,10 @@ void mg_draw_ui(void){
 }
 void mg_init(void){
 	mtime_init(); //TODO delete ASAP
-	msound_load(&(mSoundDesc){"../../assets/pew.wav"}, &pew_sound);
-	msound_load(&(mSoundDesc){"../../assets/enemy_pew.wav"}, &enemy_pew_sound);
-	msound_load(&(mSoundDesc){"../../assets/POWERUP.wav"}, &powerup_sound);
-	msound_load(&(mSoundDesc){"../../assets/menu.wav"}, &menu_sound);
+	msound_load(&(mSoundDesc){"../assets/pew.wav"}, &pew_sound);
+	msound_load(&(mSoundDesc){"../assets/enemy_pew.wav"}, &enemy_pew_sound);
+	msound_load(&(mSoundDesc){"../assets/POWERUP.wav"}, &powerup_sound);
+	msound_load(&(mSoundDesc){"../assets/menu.wav"}, &menu_sound);
 	tex_atlas = *((mTex*)(m.texture_atlas)); //already initialized via mui, no need to copy
 	mg_ship_create(&ship);
 }
