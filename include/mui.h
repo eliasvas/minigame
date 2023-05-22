@@ -130,7 +130,8 @@ static inline void mui_load_texture_atlas(muiState *mui){
 	if (mui->texture_atlas == NULL)mui->texture_atlas = (mTex*)malloc(sizeof(mTex));
 	//Load the texture atlas
 	mqoiDesc desc = {0};
-	u8 *tp = mqoi_load("../assets/atlas.qoi", &desc);
+	//u8 *tp = mqoi_load("../assets/atlas.qoi", &desc);
+	u8 *tp = mqoi_load("../../assets/atlas.qoi", &desc);
 	MTEX_FORMAT format;
 	if (desc.colorspace){
 		if (desc.channels == 4)format = MTEX_FORMAT_RGBA8U;

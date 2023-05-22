@@ -1,3 +1,5 @@
 /build
 /assets
+/SDL2
+/SDL2_mixer
 /.vscode

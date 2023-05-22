@@ -17,7 +17,7 @@ extern "C" {
 typedef struct mTimeState
 {
     u32 initialized;
-    LARGE_INTE GER freq;
+    LARGE_INTEGER freq;
     LARGE_INTEGER start;
 }mTimeState;
 #else
@@ -33,7 +33,7 @@ typedef struct mTimeState
 #endif
 
 #if OS_WIN
-s64 _ds64_muldiv(s64 value, s64 numer, s64 denom) {
+static inline i64 _ds64_muldiv(i64 value, i64 numer, i64 denom) {
     int64_t q = value / denom;
     int64_t r = value % denom;
     return q * numer + r * numer / denom;

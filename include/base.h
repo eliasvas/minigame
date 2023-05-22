@@ -90,11 +90,7 @@ static inline b32 is_pow2(uintptr_t x){
 //ASSERTS
 #define STMNT(S) do{ S }while(0)
 #define ASSERT_BREAK() (*(int*)0 = 0xABCD)
-#if ENABLE_ASSERT
 #define ASSERT(c) STMNT( if (!(c)){ ASSERT_BREAK(); } )
-#else
-#define ACCERT(c)
-#endif
 
 #define DA_REALLOC(c,p,s) realloc(p,s)
 #define DA_FREE(c,p)      free(p)

@@ -1,6 +1,7 @@
-#include "base.h"
+
 #include "math.h"
 #include "mWin.h"
+#include "base.h"
 #include "mInput.h"
 #include "mRend.h"
 #include "mTex.h"
@@ -20,7 +21,10 @@ typedef enum {
 }mgMenuState;
 
 static mTex tex_atlas;
-static mSound snd;
+static mSound pew_sound;
+static mSound enemy_pew_sound;
+static mSound powerup_sound;
+static mSound menu_sound;
 static mgMenuState menu_state = MG_MENU_START;
 static int val = 6;
 static int arcademode = 0;
@@ -146,7 +150,7 @@ void mg_ship_update(mgShip *s, f32 dt){
 	//s->pos.x = minput_get_mouse_pos().x;
 
 	if (mkey_pressed(MK_W) && mtime_sec(mtime_now()-s->last_shot_time) > 0.1){
-		//msound_play(&snd);
+		msound_play(&pew_sound);
 		s->last_shot_time = mtime_now();
 		mgProjectile p = (mgProjectile){(v2){s->pos.x, s->pos.y+10},30,300,MG_PLAYER_BULLET};
 		da_push(projectiles, p);
@@ -193,6 +197,7 @@ void mg_enemy_update(mgEnemy *s, f32 dt){
 	RND_SEED(mtime_now());
 	if (RND() % 10000 == 0){
 		mgProjectile p = (mgProjectile){(v2){s->pos.x, s->pos.y},30,300,MG_ENEMY_BULLET};
+		msound_play(&enemy_pew_sound);
 		da_push(projectiles, p);
 	}
 }
@@ -225,6 +230,7 @@ b32 mg_ship_isect(mgShip *s){
 		}else if (projectiles[i].type == MG_POWERUP &&  mg_circle_isect(s->pos.x,s->pos.y, projectiles[i].pos.x, projectiles[i].pos.y, 20)){
 			da_free(enemies);
 			da_del(projectiles, i);
+			msound_play(&powerup_sound);
 			return TRUE;
 		}
 	}
@@ -301,15 +307,18 @@ void mg_draw_ui(void){
 			{
 				mui_panel_begin(&m, (iv2){300 - MUI_BUTTON_SIZE_X/2,200});
 				if (mui_button(&m,__LINE__, "PLAY")){
-					menu_state = MG_MENU_PLAY;				
+					menu_state = MG_MENU_PLAY;	
+					msound_play(&menu_sound);			
 					start_time = mtime_now();
 					wave_counter = 0;
 				}
 				if (mui_button(&m,__LINE__, "HOWTO")){
-					menu_state = MG_MENU_HOWTO;
+					menu_state = MG_MENU_HOWTO;	
+					msound_play(&menu_sound);
 				}
 				if (mui_button(&m,__LINE__, "OPTIONS")){
-					menu_state = MG_MENU_OPT;
+					menu_state = MG_MENU_OPT;	
+					msound_play(&menu_sound);
 				}
 				mui_panel_end(&m);
 			}break;
@@ -318,9 +327,12 @@ void mg_draw_ui(void){
 				mui_panel_begin(&m, (iv2){300 - MUI_BUTTON_SIZE_X/2,200});
 				static int val2 = 7;
 				mui_slider(&m,__LINE__, "VOLUME", &val2, 0, 10);
-				if (mui_checkbox(&m,__LINE__, "ARCADE", &arcademode)){}
+				if (mui_checkbox(&m,__LINE__, "ARCADE", &arcademode)){	
+					msound_play(&menu_sound);
+				}
 				if (mui_button(&m,__LINE__, "BACK")){
-					menu_state = MG_MENU_START;
+					menu_state = MG_MENU_START;	
+					msound_play(&menu_sound);
 				}
 				mui_panel_end(&m);
 			}break;
@@ -330,7 +342,8 @@ void mg_draw_ui(void){
 				mui_label(&m, __LINE__, "MOVE:AD");
 				mui_label(&m, __LINE__, "SHOOT:W");
 				if (mui_button(&m,__LINE__, "BACK")){
-					menu_state = MG_MENU_START;
+					menu_state = MG_MENU_START;	
+					msound_play(&menu_sound);
 				}
 				mui_panel_end(&m);
 			}break;
@@ -343,7 +356,8 @@ void mg_draw_ui(void){
 				if(mui_button(&m, __LINE__, "RESTART")){
 					menu_state = MG_MENU_START;
 					da_free(enemies);
-					da_free(projectiles);
+					da_free(projectiles);	
+					msound_play(&menu_sound);
 				}
 				mui_layout_pop(&m);
 				mui_panel_end(&m);
@@ -354,7 +368,10 @@ void mg_draw_ui(void){
 }
 void mg_init(void){
 	mtime_init(); //TODO delete ASAP
-	msound_load(&(mSoundDesc){"../assets/b.wav"}, &snd);
+	msound_load(&(mSoundDesc){"../../assets/pew.wav"}, &pew_sound);
+	msound_load(&(mSoundDesc){"../../assets/enemy_pew.wav"}, &enemy_pew_sound);
+	msound_load(&(mSoundDesc){"../../assets/POWERUP.wav"}, &powerup_sound);
+	msound_load(&(mSoundDesc){"../../assets/menu.wav"}, &menu_sound);
 	tex_atlas = *((mTex*)(m.texture_atlas)); //already initialized via mui, no need to copy
 	mg_ship_create(&ship);
 }
