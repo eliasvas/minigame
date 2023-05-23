@@ -305,10 +305,10 @@ void mg_draw_ui(void){
 	switch(menu_state){
 		case(MG_MENU_START):
 			{
-				mui_panel_begin(&m, (iv2){300 - MUI_BUTTON_SIZE_X/2,200});
+				mui_panel_begin(&m, (iv2){300 - m.style.button_size_x/2,200});
 				if (mui_button(&m,__LINE__, "PLAY")){
 					menu_state = MG_MENU_PLAY;	
-					msound_play(&menu_sound);			
+					msound_play(&menu_sound);
 					start_time = mtime_now();
 					wave_counter = 0;
 				}
@@ -324,7 +324,7 @@ void mg_draw_ui(void){
 			}break;
 			case(MG_MENU_OPT):
 			{
-				mui_panel_begin(&m, (iv2){300 - MUI_BUTTON_SIZE_X/2,200});
+				mui_panel_begin(&m, (iv2){300 - m.style.button_size_x/2,200});
 				static int val2 = 7;
 				mui_slider(&m,__LINE__, "VOLUME", &val2, 0, 10);
 				if (mui_checkbox(&m,__LINE__, "ARCADE", &arcademode)){	
@@ -338,7 +338,7 @@ void mg_draw_ui(void){
 			}break;
 			case(MG_MENU_HOWTO):
 			{
-				mui_panel_begin(&m, (iv2){300 - MUI_BUTTON_SIZE_X/2,200});
+				mui_panel_begin(&m, (iv2){300 - m.style.button_size_x/2,200});
 				mui_label(&m, __LINE__, "MOVE:AD");
 				mui_label(&m, __LINE__, "SHOOT:W");
 				if (mui_button(&m,__LINE__, "BACK")){
@@ -349,7 +349,7 @@ void mg_draw_ui(void){
 			}break;
 			case(MG_MENU_PLAY):
 			{
-				mui_panel_begin(&m, (iv2){300 - 3*(MUI_BUTTON_SIZE_X+5)/2,5});
+				mui_panel_begin(&m, (iv2){300 - 3*(m.style.button_size_x+5)/2,5});
 				mui_layout_push(&m, MUI_HORIZONTAL_LAYOUT);
 				mui_checkbox(&m, __LINE__, "GODMODE", &godmode);
 				mui_checkbox(&m, __LINE__, "PAUSE", &game_paused);
