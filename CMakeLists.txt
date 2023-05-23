@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(Minigame)
 project(Minigame VERSION 1.0)
 set (CMAKE_C_STANDARD 99)
-add_executable(Minigame main.c mAlloc.c mg.c mProfiler.c SDL_backend.c)
+add_executable(Minigame src/main.c src/mAlloc.c src/mg.c src/mProfiler.c src/SDL_backend.c)
 target_include_directories(Minigame PUBLIC "${PROJECT_BINARY_DIR}")
 target_include_directories(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../include")
 #for windows, we put sdl2 and sdl2_mixer binaries in root folder..
