@@ -11,9 +11,6 @@
 #include "base.h"
 
 #define MUI_TEXT_SIZE 16
-#define MUI_SCROLL_SIZE 16
-#define MUI_BUTTON_SIZE_X 90 * 1.3
-#define MUI_BUTTON_SIZE_Y 40 * 1.3
 #define MUI_MAX_LAYOUTS 64
 #define MUI_MAX_COMMANDS 64
 
@@ -45,6 +42,10 @@ typedef struct {
 	mColor border_color;
 	mColor scroll_bg_color;
 	mColor checkbox_border_color;
+
+	u32 scroll_size_x;
+	u32 button_size_x;
+	u32 button_size_y;
 }muiStyle;
 
 
@@ -152,6 +153,10 @@ static inline void mui_style_default(muiStyle *style){
 	style->hot_color = (mColor){0xFF2626};
 	style->active_color = (mColor){0xCC0000};
 	style->border_color = (mColor){0x585858};
+
+	style->scroll_size_x =16;
+	style->button_size_x = 90 * 1.3;
+	style->button_size_y = 40 * 1.3;
 }
 
 
@@ -248,13 +253,13 @@ static inline mRect mui_layout_advance_button_imm(muiState *mui){
 	mRect rect = {0};
 	muiLayout *current_layout = mui_layout_top(mui);
 	if (current_layout->type == MUI_HORIZONTAL_LAYOUT){
-		rect = (mRect){current_layout->start.x + current_layout->size.x, current_layout->start.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
-		current_layout->size.x += MUI_BUTTON_SIZE_X + current_layout->padding;
-		current_layout->size.y = MAX(MUI_BUTTON_SIZE_Y + current_layout->padding, current_layout->size.y);
+		rect = (mRect){current_layout->start.x + current_layout->size.x, current_layout->start.y, mui->style.button_size_x, mui->style.button_size_y};
+		current_layout->size.x += mui->style.button_size_x + current_layout->padding;
+		current_layout->size.y = MAX(mui->style.button_size_y + current_layout->padding, current_layout->size.y);
 	}else if (current_layout->type == MUI_VERTICAL_LAYOUT){
-		rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y, MUI_BUTTON_SIZE_X, MUI_BUTTON_SIZE_Y};
-		current_layout->size.y += MUI_BUTTON_SIZE_Y + current_layout->padding;
-		current_layout->size.x = MAX(MUI_BUTTON_SIZE_X + current_layout->padding, current_layout->size.x);
+		rect = (mRect){current_layout->start.x, current_layout->start.y + current_layout->size.y, mui->style.button_size_x, mui->style.button_size_y};
+		current_layout->size.y += mui->style.button_size_y + current_layout->padding;
+		current_layout->size.x = MAX(mui->style.button_size_x + current_layout->padding, current_layout->size.x);
 	}
 	return rect;
 }
@@ -333,7 +338,7 @@ static inline b32 mui_checkbox_imm(muiState *mui, u32 id, char *label, b32 *onof
 static inline b32 mui_slider_imm(muiState *mui, u32 id, char *label, int *val, int min, int max){
 
 	muiLayout *current_layout = mui_layout_top(mui);
-	mRect bar_rect = (mRect){current_layout->start.x + current_layout->size.x  + (MUI_BUTTON_SIZE_X-MUI_SCROLL_SIZE) * (((*val)-min) / (f32)(max - min)), current_layout->start.y,MUI_SCROLL_SIZE, MUI_BUTTON_SIZE_Y};
+	mRect bar_rect = (mRect){current_layout->start.x + current_layout->size.x  + (mui->style.button_size_x-mui->style.scroll_size_x) * (((*val)-min) / (f32)(max - min)), current_layout->start.y,mui->style.scroll_size_x, mui->style.button_size_y};
 	mRect rect =  mui_layout_advance_button_imm(mui);
 	//this should happen for bar_rect
 	if (mmouse_isect(bar_rect)){
@@ -366,8 +371,8 @@ static inline b32 mui_slider_imm(muiState *mui, u32 id, char *label, int *val, i
 	//SCETCHY AF
 	if (mui->active_item == id){
 		int m_x = minput_get_mouse_pos().x;
-		m_x = CLAMP(rect.x, m_x, rect.x + rect.w - MUI_SCROLL_SIZE);
-		f32 scroll_percent = (m_x -rect.x) / ((f32)rect.w - MUI_SCROLL_SIZE);
+		m_x = CLAMP(rect.x, m_x, rect.x + rect.w - mui->style.scroll_size_x);
+		f32 scroll_percent = (m_x -rect.x) / ((f32)rect.w - mui->style.scroll_size_x);
 
 		*val = min + scroll_percent * (max - min);
 	}
