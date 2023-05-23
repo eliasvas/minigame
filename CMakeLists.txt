@@ -1,26 +1,20 @@
 cmake_minimum_required(VERSION 3.10)
-project(Minigame)
-project(Minigame VERSION 1.0)
-set (CMAKE_C_STANDARD 99)
-add_executable(Minigame src/main.c src/mAlloc.c src/mg.c src/mProfiler.c src/SDL_backend.c)
-target_include_directories(Minigame PUBLIC "${PROJECT_BINARY_DIR}")
-target_include_directories(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../include")
-#for windows, we put sdl2 and sdl2_mixer binaries in root folder..
-if (WIN32)
-    target_include_directories(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../SDL2/include")
-    target_include_directories(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../SDL2_mixer/include")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        target_link_libraries(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../SDL2/lib/x64/SDL2.lib")
-        target_link_libraries(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../SDL2/lib/x64/SDL2main.lib")
-        target_link_libraries(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../SDL2_mixer/lib/x64/SDL2_mixer.lib")
 
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        target_link_libraries(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../SDL2/lib/x86/SDL2.lib")
-        target_link_libraries(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../SDL2/lib/x86/SDL2main.lib")
-        target_link_libraries(Minigame PUBLIC "${PROJECT_BINARY_DIR}/../SDL2_mixer/lib/x86/SDL2_mixer.lib")
-    endif()
-else()
-    target_link_libraries(Minigame PUBLIC SDL2)
-    target_link_libraries(Minigame PUBLIC SDL2main)
-    target_link_libraries(Minigame PUBLIC SDL2_mixer)
-endif()
+project(minigame VERSION 1.0)
+
+set(CMAKE_C_STANDARD 99)
+
+find_package(SDL2 REQUIRED)
+find_package(SDL2_mixer REQUIRED)
+
+add_executable(${PROJECT_NAME}
+        src/main.c
+        src/mAlloc.c
+        src/mg.c
+        src/mProfiler.c
+        src/SDL_backend.c)
+
+target_include_directories(${PROJECT_NAME} PUBLIC include/minigame)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2 SDL2::SDL2main)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2_mixer::SDL2_mixer)
