@@ -38,14 +38,16 @@ typedef enum{
 	MG_PLAYER_BULLET = 1,
 	MG_ENEMY_BULLET,
 	MG_POWERUP,
-	MG_STAR,
+	MG_EXPLOSION,
 }mgProjectileType;
 typedef struct {
 	v2 pos;
 	u32 size;
 	f32 speed;
+	u64 spawn_time;
 	mgProjectileType type;
 }mgProjectile;
+mgProjectile *projectiles = NULL;
 void mg_projectile_update(mgProjectile *p, f32 dt){
 	switch(p->type){
 		case MG_PLAYER_BULLET:
@@ -56,6 +58,11 @@ void mg_projectile_update(mgProjectile *p, f32 dt){
 			break;
 		case MG_POWERUP:
 			p->pos.y += p->speed * dt;
+			break;
+		case MG_EXPLOSION:
+			if ((int)(mtime_sec(4*mtime_now())) % 2 == 0){
+				p->pos.y += p->speed * dt;
+			}
 			break;
 		default:
 			break;
@@ -68,6 +75,12 @@ void mg_projectile_render(mgProjectile *p){
 				mtex_render(&tex_atlas, (mRect){16*8,0,16,16}, (mRect){p->pos.x - p->size/2,p->pos.y - p->size/2,p->size,p->size});
 			else
 				mtex_render(&tex_atlas, (mRect){16*9,0,16,16}, (mRect){p->pos.x - p->size/2,p->pos.y - p->size/2,p->size,p->size});
+		}break;
+		case (MG_EXPLOSION):{
+			if ((int)(mtime_sec(4*mtime_now() - 4*p->spawn_time)) % 2 == 0)
+				mtex_render(&tex_atlas, (mRect){16*8,16*0,16,16}, (mRect){p->pos.x - p->size/2,p->pos.y - p->size/2,p->size,p->size});
+			else
+				mtex_render(&tex_atlas, (mRect){16*7,16*0,16,16}, (mRect){p->pos.x - p->size/2,p->pos.y - p->size/2,p->size,p->size});
 		}break;
 		case (MG_PLAYER_BULLET):{
 				if ((int)(mtime_sec(2*mtime_now())) % 2 == 0)
@@ -87,12 +100,14 @@ void mg_projectile_render(mgProjectile *p){
 	
 }
 
-mgProjectile *projectiles = NULL;
 void mg_projectiles_update(f32 dt){
 	for (int i = 0; i < da_len(projectiles); ++i){
 		mg_projectile_update(&projectiles[i], dt);
 		f32 del_threshold = 10;
 		if (projectiles[i].pos.y < (0 - del_threshold) || projectiles[i].pos.y > (600 + del_threshold)){
+			da_del(projectiles, i);
+		}
+		if (mtime_sec(mtime_now() - projectiles[i].spawn_time) > 0.5 && projectiles[i].type == MG_EXPLOSION){
 			da_del(projectiles, i);
 		}
 	}
@@ -152,7 +167,7 @@ void mg_ship_update(mgShip *s, f32 dt){
 	if (mkey_pressed(MK_W) && mtime_sec(mtime_now()-s->last_shot_time) > 0.1){
 		msound_play(&pew_sound);
 		s->last_shot_time = mtime_now();
-		mgProjectile p = (mgProjectile){(v2){s->pos.x, s->pos.y+10},30,300,MG_PLAYER_BULLET};
+		mgProjectile p = (mgProjectile){(v2){s->pos.x, s->pos.y+10},30,300,mtime_now(),MG_PLAYER_BULLET};
 		da_push(projectiles, p);
 	}
 	mg_ship_isect(s);
@@ -169,6 +184,7 @@ static mgShip ship;
 
 //------------ENEMY------------
 typedef struct{
+	v2 prev_pos;
 	v2 pos;
 	u32 size; //in pixels
 	u64 last_shot_time; //to calc when it can reshoot
@@ -182,6 +198,7 @@ typedef struct{
 }mgEnemy;
 M_RESULT mg_enemy_create(mgEnemy *s){
 	s->pos = (v2){200,280};
+	s->prev_pos = s->pos;
 	s->size = 30;
 	s->last_shot_time = 0x0;
 	s->speed = 240;
@@ -191,12 +208,13 @@ M_RESULT mg_enemy_create(mgEnemy *s){
 }
 void mg_enemy_update(mgEnemy *s, f32 dt){
 	if ((int)(mtime_sec(4*mtime_now())) % 2 == 0){
+		s->prev_pos = s->pos;
 		s->pos.y += s->speed * dt;
 		s->pos.y = MAX(s->start_pos.y, MIN(s->pos.y, s->end_pos.y));
 	}
 	RND_SEED(mtime_now());
 	if (RND() % 10000 == 0){
-		mgProjectile p = (mgProjectile){(v2){s->pos.x, s->pos.y},30,300,MG_ENEMY_BULLET};
+		mgProjectile p = (mgProjectile){(v2){s->pos.x, s->pos.y},30,300,mtime_now(),MG_ENEMY_BULLET};
 		msound_play(&enemy_pew_sound);
 		da_push(projectiles, p);
 	}
@@ -224,10 +242,16 @@ b32 mg_ship_isect(mgShip *s){
 	for (u32 i = 0; i < da_len(projectiles); ++i){
 		if (!godmode && projectiles[i].type == MG_ENEMY_BULLET &&  mg_circle_isect(s->pos.x,s->pos.y, projectiles[i].pos.x, projectiles[i].pos.y, 20)){
 			menu_state = MG_MENU_START;
+			msound_play(&menu_sound);
 			da_free(projectiles);
 			da_free(enemies);
 			return TRUE;
 		}else if (projectiles[i].type == MG_POWERUP &&  mg_circle_isect(s->pos.x,s->pos.y, projectiles[i].pos.x, projectiles[i].pos.y, 20)){
+			for (int i = 0; i < da_len(enemies); ++i){
+				f32 exp_speed = (enemies[i].pos.y - enemies[i].prev_pos.y < 0.1) ? 0 : 200;
+				mgProjectile p = (mgProjectile){(v2){enemies[i].pos.x, enemies[i].pos.y},27,exp_speed,mtime_now(),MG_EXPLOSION};
+				da_push(projectiles, p);
+			}
 			da_free(enemies);
 			da_del(projectiles, i);
 			msound_play(&powerup_sound);
@@ -285,9 +309,12 @@ void mg_enemies_update(f32 dt){
 		if (mg_enemy_bullet_isect(&enemies[i])){
 			//spawn animation for dead enemy
 			//msound_play(&snd);
+			f32 exp_speed = (enemies[i].pos.y - enemies[i].prev_pos.y < 0.1) ? 0 : 200;
+			mgProjectile p = (mgProjectile){(v2){enemies[i].pos.x, enemies[i].pos.y},27,exp_speed,mtime_now(),MG_EXPLOSION};
+			da_push(projectiles, p);
 			RND_SEED(mtime_now());
 			if (RND() % 5 == 0){
-				mgProjectile p = (mgProjectile){(v2){enemies[i].pos.x, enemies[i].pos.y},15,300,MG_POWERUP};
+				mgProjectile p = (mgProjectile){(v2){enemies[i].pos.x, enemies[i].pos.y},15,300,mtime_now(),MG_POWERUP};
 				da_push(projectiles, p);
 			}
 			da_del(enemies, i); //TODO does that change the for loop though??? investigate!!!!!
