@@ -221,7 +221,7 @@ void mg_enemy_update(mgEnemy *s, f32 dt){
 	if (mtime_sec(mtime_now()) > 35.0)p--;
 	if (mtime_sec(mtime_now()) > 60.0)p--;
 	if (mtime_sec(mtime_now()) > 120.0)p--;
-	if (RND() % (u32)(p * dt * 1000000) == 0){
+	if (dt > 0.0001 && RND() % (u32)(p * dt * 1000000) == 0){
 		mgProjectile p = (mgProjectile){(v2){s->pos.x, s->pos.y},30,300,mtime_now(),MG_ENEMY_BULLET};
 		msound_play(&enemy_pew_sound);
 		da_push(projectiles, p);

@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/assets/)
-
 project(minigame VERSION 1.0)
 
 set(CMAKE_C_STANDARD 99)
@@ -20,3 +18,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2 SDL2::SDL2main)
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL2_mixer::SDL2_mixer)
+
+add_custom_command(
+        TARGET minigame POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets/
+        ${CMAKE_CURRENT_BINARY_DIR}/assets/)
