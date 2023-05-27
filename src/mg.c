@@ -22,6 +22,8 @@ typedef enum {
 
 static mTex tex_atlas;
 static mSound pew_sound;
+static mSound dead_sound;
+static mSound enemy_dead_sound;
 static mSound enemy_pew_sound;
 static mSound powerup_sound;
 static mSound menu_sound;
@@ -213,7 +215,13 @@ void mg_enemy_update(mgEnemy *s, f32 dt){
 		s->pos.y = MAX(s->start_pos.y, MIN(s->pos.y, s->end_pos.y));
 	}
 	RND_SEED(mtime_now());
-	if (RND() % 10000 == 0){
+	f32 p = 10;
+	if (mtime_sec(mtime_now()) > 5.0)p--;
+	if (mtime_sec(mtime_now()) > 15.0)p--;
+	if (mtime_sec(mtime_now()) > 35.0)p--;
+	if (mtime_sec(mtime_now()) > 60.0)p--;
+	if (mtime_sec(mtime_now()) > 120.0)p--;
+	if (RND() % (u32)(p * dt * 1000000) == 0){
 		mgProjectile p = (mgProjectile){(v2){s->pos.x, s->pos.y},30,300,mtime_now(),MG_ENEMY_BULLET};
 		msound_play(&enemy_pew_sound);
 		da_push(projectiles, p);
@@ -242,7 +250,7 @@ b32 mg_ship_isect(mgShip *s){
 	for (u32 i = 0; i < da_len(projectiles); ++i){
 		if (!godmode && projectiles[i].type == MG_ENEMY_BULLET &&  mg_circle_isect(s->pos.x,s->pos.y, projectiles[i].pos.x, projectiles[i].pos.y, 20)){
 			menu_state = MG_MENU_START;
-			msound_play(&menu_sound);
+			msound_play(&dead_sound);
 			da_free(projectiles);
 			da_free(enemies);
 			return TRUE;
@@ -274,12 +282,12 @@ char *fbitmaps[MG_ENEMY_FORMATION_COUNT] = {
 	"0000011010011001",
 	"0000100110010110",
 };
-void mg_spawn_enemy_wave(MG_ENEMY_WAVE_FORMATION f){
+void mg_spawn_enemy_wave(MG_ENEMY_WAVE_FORMATION f, char sym){
 	RND_SEED(mtime_now());
-	f32 pos_x = 100 + 200 * (RND() % 3);//(3 + RND() % 3) * 100;
+	f32 pos_x = (f32)100 + 200 * (RND() % 3);//(3 + RND() % 3) * 100;
 	for (u32 i = 0; i < 4; ++i){
 		for (u32 j = 0; j < 4; ++j){
-			if (fbitmaps[f][i * 4 + j] == '1'){
+			if (fbitmaps[f][i * 4 + j] == sym){
 				//RND_SEED(mtime_now());
 				mgEnemy e;
 				mg_enemy_create(&e);
@@ -296,13 +304,17 @@ void mg_spawn_enemy_wave(MG_ENEMY_WAVE_FORMATION f){
 }
 void mg_enemies_update(f32 dt){
 	wave_timer = mtime_now() - start_time;
-	b32 new_wave = (wave_counter*(u64)5 == (u64)(mtime_sec(wave_timer)));
+	int c = 5;
+	if (mtime_sec(mtime_now()) > 5.0)c++;
+	if (mtime_sec(mtime_now()) > 15.0)c++;
+	if (mtime_sec(mtime_now()) > 35.0)c++;
+	b32 new_wave = (wave_counter*(u64)c == (u64)(mtime_sec(wave_timer)));
 	if (new_wave){
 		wave_counter++;
 	}
 	if (mkey_pressed(MK_Q) || new_wave){
 		RND_SEED(mtime_now());
-		mg_spawn_enemy_wave(RND() % MG_ENEMY_FORMATION_COUNT);
+		mg_spawn_enemy_wave(RND() % MG_ENEMY_FORMATION_COUNT, '0' + RND() % 2);
 	}
 	for (u32 i = 0; i < da_len(enemies); ++i){
 		mg_enemy_update(&enemies[i], dt);
@@ -317,6 +329,7 @@ void mg_enemies_update(f32 dt){
 				mgProjectile p = (mgProjectile){(v2){enemies[i].pos.x, enemies[i].pos.y},15,300,mtime_now(),MG_POWERUP};
 				da_push(projectiles, p);
 			}
+			msound_play(&enemy_dead_sound);
 			da_del(enemies, i); //TODO does that change the for loop though??? investigate!!!!!
 		}
 	}
@@ -396,9 +409,11 @@ void mg_draw_ui(void){
 void mg_init(void){
 	mtime_init(); //TODO delete ASAP
 	msound_load(&(mSoundDesc){"../assets/pew.wav"}, &pew_sound);
+	msound_load(&(mSoundDesc){"../assets/dead.wav"}, &dead_sound);
 	msound_load(&(mSoundDesc){"../assets/enemy_pew.wav"}, &enemy_pew_sound);
 	msound_load(&(mSoundDesc){"../assets/POWERUP.wav"}, &powerup_sound);
 	msound_load(&(mSoundDesc){"../assets/menu.wav"}, &menu_sound);
+	msound_load(&(mSoundDesc){"../assets/enemy_dead.wav"}, &enemy_dead_sound);
 	tex_atlas = *((mTex*)(m.texture_atlas)); //already initialized via mui, no need to copy
 	mg_ship_create(&ship);
 }

@@ -272,6 +272,12 @@ M_RESULT msound_play(mSound *s){
 	channel = Mix_PlayChannel(-1, sound, 0);
 	return M_OK;
 }
+M_RESULT msound_play_inf(mSound *s){
+	Mix_Chunk *sound = (Mix_Chunk*)(s->internal_state);
+	i32 channel;
+	channel = Mix_PlayChannel(-1, sound, -1);
+	return M_OK;
+}
 
 M_RESULT msound_destroy(mSound *s){
 	Mix_Chunk *sound = (Mix_Chunk*)(s->internal_state);
