@@ -1,0 +1,6 @@
+[submodule "ext/SDL"]
+	path = ext/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "ext/SDL_mixer"]
+	path = ext/SDL_mixer
+	url = https://github.com/libsdl-org/SDL_mixer
