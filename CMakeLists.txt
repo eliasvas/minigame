@@ -33,8 +33,8 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_directories(${PROJECT_NAME}
-        PUBLIC ext/SDL/src
-        PUBLIC ext/SDL_mixer/src
+        PRIVATE ext/SDL/src
+        PRIVATE ext/SDL_mixer/src
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
@@ -48,3 +48,20 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/assets/
         ${CMAKE_CURRENT_BINARY_DIR}/assets/)
+
+
+if (WIN32)
+add_custom_command(
+        TARGET minigame POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL3::SDL3>" "$<TARGET_FILE_DIR:minigame>"
+        VERBATIM
+)
+endif()
+
+if (WIN32)
+add_custom_command(
+        TARGET minigame POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL3_mixer>" "$<TARGET_FILE_DIR:minigame>"
+        VERBATIM
+)
+endif()

@@ -10,7 +10,6 @@ In _SDL_Backend.c_ is all the external code.. it can be changed seamlessly to an
 Most functions in the codebase are **static internal**, because I'm too bored to write good code. I freeballed it.
 ## Build
 CMake is used to bulid the project for both windows and linux.
-#### Some Things to get you started on building with CMake + vcpkg
+#### Some Things to get you started on building with CMake
 - https://code.visualstudio.com/docs/cpp/cmake-linux
 - https://cmake.org/cmake/help/latest/guide/tutorial/index.html
-- https://vcpkg.io/en/getting-started.html
