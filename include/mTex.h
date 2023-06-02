@@ -30,12 +30,12 @@ static inline M_RESULT mtex_clip(mRect *tex_coords, mRect *rect, mRect dst_rect)
     int rect_w = MIN(dst_rect.w+dst_rect.x, rect_quad.w);
     f32 percent_w = (rect_quad.w- rect_w) / ((f32)rect_quad.w - rect_quad.x);
     rect_quad.w = rect_w;
-    tex_quad.w -= tex_quad.w * percent_w;
+    tex_quad.w -= (i32)(tex_quad.w * percent_w);
 
     int rect_h = MIN(dst_rect.h+dst_rect.y, rect_quad.h);
     f32 percent_h = (rect_quad.h- rect_h) / ((f32)rect_quad.h - rect_quad.y);
     rect_quad.h = rect_h;
-    tex_quad.h -= tex_quad.h * percent_h;
+    tex_quad.h -= (i32)(tex_quad.h * percent_h);
 
 
     int rect_x = MAX(dst_rect.x, rect_quad.x);

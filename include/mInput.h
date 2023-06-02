@@ -129,11 +129,11 @@ static inline void minput_init(void)
 
 static inline v2 minput_get_mouse_pos(void)
 {
-    return (v2){mis.mouse_pos_x, mis.mouse_pos_y};
+    return (v2){(f32)mis.mouse_pos_x, (f32)mis.mouse_pos_y};
 }
 static inline v2 minput_get_mouse_delta(void)
 {
-    return (v2){mis.mouse_delta_x, mis.mouse_delta_y};
+    return (v2){(f32)mis.mouse_delta_x, (f32)mis.mouse_delta_y};
 }
 static inline b32 mkey_pressed(mKey k)
 {

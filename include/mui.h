@@ -141,7 +141,8 @@ static inline void mui_load_texture_atlas(muiState *mui){
 		if (desc.channels == 4)format = MTEX_FORMAT_RGBA8S;
 		else format = MTEX_FORMAT_RGB8S;
 	}
-	ASSERT(mtex_create(&(mTexDesc){desc.width,desc.height,format},tp, (mTex*)mui->texture_atlas));
+	mTexDesc td = (mTexDesc){desc.width,desc.height,format};
+	ASSERT(mtex_create(&td,tp, (mTex*)mui->texture_atlas));
 }
 ////////////////////////////////////////////////////
 
@@ -162,6 +163,7 @@ static inline void mui_style_default(muiStyle *style){
 
 static inline void mui_init(muiState *mui){
 	MEMSET(mui, 0, sizeof(*mui));
+	mui->texture_atlas = NULL;
 	
 	mui_load_texture_atlas(mui);
 

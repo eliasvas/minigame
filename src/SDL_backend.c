@@ -1,19 +1,15 @@
-#ifdef __gnu_linux__
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-#else
-#include <SDL.h>
-#include <SDL_mixer.h>
-#endif
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_mixer.h>
 #include "base.h"
 
 M_RESULT mbackend_init(void){
+	SDL_SetMainReady();
 	if ( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ) {
 		printf("Error initializing SDL: [%s]\n", SDL_GetError());
 		return M_ERR;
 	}
 	i32 audio_rate = 22050;
-	u16 audio_format = AUDIO_S16SYS;
+	u16 audio_format = SDL_AUDIO_S16SYS;
 	i32 audio_channels = 2;
 	i32 audio_buffers = 4096;
 	if(Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) != 0){
@@ -42,7 +38,7 @@ M_RESULT mwin_create(mWinDesc *desc, mWin *win){
 	SDLImplWindow *sdl_win = malloc(sizeof(SDLImplWindow));
 	MEMZERO_STRUCT(sdl_win);
 
-	sdl_win->window = SDL_CreateWindow( "minigame", desc->x, desc->y, desc->width, desc->height, SDL_WINDOW_SHOWN);
+	sdl_win->window = SDL_CreateWindow( "minigame", desc->width, desc->height,0);
 
 	if ( !sdl_win->window ) {
 		printf("Error creating window: [%s]\n", SDL_GetError());
@@ -96,8 +92,8 @@ void minput_update(void)
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		switch (e.type) {
-			case SDL_WINDOWEVENT:
-				if(e.window.event == SDL_WINDOWEVENT_RESIZED) {
+			case SDL_EVENT_WINDOW_RESIZED:
+				if(e.window.type == SDL_EVENT_WINDOW_RESIZED) {
 					SDLImplWindow *sdl_win = window.internal_state;
 					SDL_Surface* surf = SDL_GetWindowSurface(sdl_win->window);
 					int w, h;
@@ -107,7 +103,7 @@ void minput_update(void)
 					window.desc.height = h;
 				}
 			break;
-			case SDL_QUIT:
+			case SDL_EVENT_QUIT:
 				exit(1);
 			break;
 		}
@@ -129,8 +125,8 @@ void minput_update(void)
 			mis.keys[MK_0 + i] = 0;
 		}
 	}
-	int x;
-	int y;
+	f32 x;
+	f32 y;
 	u32 mouse_state = SDL_GetMouseState(&x, &y);
 	mis.mouse_delta_x = x - mis.mouse_pos_x;
 	mis.mouse_delta_y = y - mis.mouse_pos_y;
@@ -176,14 +172,14 @@ typedef struct {
 void mrend_clear(void){
 	SDLImplWindow *sdl_win = window.internal_state;
 	SDL_UpdateWindowSurface(sdl_win->window);
-	SDL_FillRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 16, 16, 16, 255 ) );
+	SDL_FillSurfaceRect( sdl_win->window_surface, NULL, SDL_MapRGBA( sdl_win->window_surface->format, 16, 16, 16, 255 ) );
 }
 
 
 void mrend_draw_rect(mRect rect, mColor col){
 	SDLImplWindow *sdl_win = window.internal_state;
 	SDL_Rect r = (SDL_Rect){rect.x, rect.y, rect.w, rect.h};
-	SDL_FillRect(sdl_win->window_surface, &r, col.col);
+	SDL_FillSurfaceRect(sdl_win->window_surface, &r, col.col);
 }
 
 void mrend_draw_tex(mTex *tex, mRect tex_coords, mRect rect){
@@ -194,7 +190,7 @@ void mrend_draw_tex(mTex *tex, mRect tex_coords, mRect rect){
 	SDL_Rect tc = (SDL_Rect){tex_coords.x, tex_coords.y, tex_coords.w, tex_coords.h};
 	SDL_Rect r = (SDL_Rect){rect.x, rect.y,rect.w, rect.h};
 
-	SDL_BlitScaled(sdl_tex->image,&tc,dest_tex->window_surface,&r);
+	SDL_BlitSurfaceScaled(sdl_tex->image,&tc,dest_tex->window_surface,&r);
 }
 
 
@@ -211,9 +207,9 @@ M_RESULT mtex_create(mTexDesc *desc, void *tex_data, mTex *tex){
 
 	u32 channels = ((desc->format & MTEX_FORMAT_RGBA8U) || (desc->format & MTEX_FORMAT_RGBA8S)) ? 4 : 3;
 	if (channels == 4)
-		sdl_tex->image = SDL_CreateRGBSurfaceFrom(tex_data, desc->width, desc->height, 32,desc->width * sizeof(u8) * channels,0xFF000000, 0x00FF0000,0x0000FF00, 0x000000FF);
+		sdl_tex->image = SDL_CreateSurfaceFrom(tex_data, desc->width, desc->height, desc->width * sizeof(u8) * channels,SDL_PIXELFORMAT_RGBA8888);
 	else 
-		sdl_tex->image = SDL_CreateRGBSurfaceFrom(tex_data, desc->width, desc->height, 24,desc->width * sizeof(u8) * channels,0xFF0000, 0x00FF00,0x0000FF, 0x000000);
+		sdl_tex->image = SDL_CreateSurfaceFrom(tex_data, desc->width, desc->height, desc->width * sizeof(u8) * channels,SDL_PIXELFORMAT_RGB888);
 	if (SDL_SetSurfaceBlendMode(sdl_tex->image,SDL_BLENDMODE_BLEND) < 0){
 		printf("Error setting blend mode: [%s]\n", SDL_GetError());
 	}
@@ -233,7 +229,7 @@ M_RESULT mtex_destroy(mTex *tex){
 	M_RESULT res = M_OK;
 	//code
 	SDLImplTexture *sdl_texture = (SDLImplTexture*)tex->internal_state;
-	SDL_FreeSurface(sdl_texture->image);
+	SDL_DestroySurface(sdl_texture->image);
 	if (sdl_texture->texture_data != NULL)
 		FREE(sdl_texture->texture_data);
 	FREE(sdl_texture);

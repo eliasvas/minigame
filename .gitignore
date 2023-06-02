@@ -9,3 +9,6 @@
 # Microsoft Visual Studio
 /.vs/
 /out/
+
+ext/SDL
+ext/SDL_mixer

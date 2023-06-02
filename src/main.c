@@ -1,3 +1,4 @@
+#define SDL_MAIN_HANDLED
 #include "base.h"
 #include "math.h"
 #include "mWin.h"
